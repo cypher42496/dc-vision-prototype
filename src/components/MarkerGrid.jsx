@@ -11,9 +11,19 @@ const MARKER_BOTTOM_ID = 1
 // The rack width is assumed to be ~8× the marker width (typical 19" rack with 5 cm marker).
 const RACK_WIDTH_IN_MARKER_WIDTHS = 8
 
-// Occupancy heuristic thresholds
-const EMPTY_BRIGHTNESS_MAX = 55    // 0-255, below → likely empty
-const EMPTY_STDDEV_MAX = 22        // low variance → likely empty (flat dark region)
+// Occupancy heuristic thresholds (conservative — avoid false positives).
+//
+// Three classes are returned by classifyOccupancy:
+//   'belegt'   — high confidence: clearly bright AND clearly textured
+//                (device fronts have screws, labels, LEDs → contrast)
+//   'leer'     — high confidence: clearly dark AND flat (rack interior depth)
+//   'unsicher' — anything in between. Treated as 'leer' in the comparison
+//                (the safe default for an audit) but flagged with a yellow
+//                ring in the AR overlay so the user knows to confirm manually.
+const BELEGT_BRIGHTNESS_MIN = 75   // mean luma must be at least this to count as belegt
+const BELEGT_STDDEV_MIN = 22       // stddev must be at least this (real device → texture)
+const LEER_BRIGHTNESS_MAX = 55     // mean luma below this → strong "leer" signal
+const LEER_STDDEV_MAX = 18         // and stddev below this → strong "leer" signal
 
 function centerOfCorners(corners) {
   const x = (corners[0].x + corners[1].x + corners[2].x + corners[3].x) / 4
@@ -61,11 +71,16 @@ function sampleRegion(imageData, cx, cy, halfW, halfH) {
 }
 
 function classifyOccupancy(sample) {
-  // Empty regions tend to be very dark AND flat (the rack's interior depth is black)
-  if (sample.mean < EMPTY_BRIGHTNESS_MAX && sample.stddev < EMPTY_STDDEV_MAX) {
+  // High-confidence belegt: clearly bright AND clearly textured (device front)
+  if (sample.mean >= BELEGT_BRIGHTNESS_MIN && sample.stddev >= BELEGT_STDDEV_MIN) {
+    return 'belegt'
+  }
+  // High-confidence leer: clearly dark AND clearly flat (rack interior)
+  if (sample.mean <= LEER_BRIGHTNESS_MAX && sample.stddev <= LEER_STDDEV_MAX) {
     return 'leer'
   }
-  return 'belegt'
+  // Otherwise we don't trust the heuristic — flag for manual confirmation
+  return 'unsicher'
 }
 
 export default function MarkerGrid({ rack, onComplete, onCancel }) {
@@ -284,15 +299,24 @@ export default function MarkerGrid({ rack, onComplete, onCancel }) {
 
           // Draw each HE quad with state color
           for (const q of quads) {
-            const effectiveIst = userOverridesRef.current[q.u] ?? newIst[q.u]
-            const sollOccupied = !!sollMap[q.u]
+            const userOverride = userOverridesRef.current[q.u]
+            const rawIst = newIst[q.u]                           // belegt | leer | unsicher
+            const effectiveIst = userOverride ?? rawIst
+            // For comparison purposes, "unsicher" counts as "leer" (conservative default)
             const istOccupied = effectiveIst === 'belegt'
+            const isUnsure = !userOverride && rawIst === 'unsicher'
+            const sollOccupied = !!sollMap[q.u]
 
             let fill, stroke
             if (sollOccupied && istOccupied) { fill = 'rgba(16,185,129,0.28)'; stroke = 'rgba(16,185,129,0.9)' }
             else if (sollOccupied && !istOccupied) { fill = 'rgba(239,68,68,0.28)'; stroke = 'rgba(239,68,68,0.9)' }
             else if (!sollOccupied && istOccupied) { fill = 'rgba(239,68,68,0.28)'; stroke = 'rgba(239,68,68,0.9)' }
             else { fill = 'rgba(100,116,139,0.12)'; stroke = 'rgba(148,163,184,0.5)' }
+
+            // Unsicher cells get an extra yellow ring on top, regardless of soll/ist combo
+            if (isUnsure) {
+              stroke = 'rgba(251,191,36,0.95)' // amber-400
+            }
 
             ctxOverlay.beginPath()
             ctxOverlay.moveTo(q.tl.x, q.tl.y)
@@ -395,6 +419,15 @@ export default function MarkerGrid({ rack, onComplete, onCancel }) {
   }
 
   const totalMarkedBelegt = Object.values(istMap).filter(v => v === 'belegt').length
+  const unsureCount = (() => {
+    let count = 0
+    for (let u = 1; u <= totalUnits; u++) {
+      // Don't count unsure HEs that the user has already manually decided on
+      if (userOverridesRef.current[u] !== undefined) continue
+      if (istMap[u] === 'unsicher') count++
+    }
+    return count
+  })()
   const deviationsCount = (() => {
     let count = 0
     for (let u = 1; u <= totalUnits; u++) {
@@ -450,9 +483,16 @@ export default function MarkerGrid({ rack, onComplete, onCancel }) {
               {markersSeen.bottom ? '● Marker unten' : '○ Marker unten'}
             </span>
             {markersSeen.top && markersSeen.bottom && (
-              <span className="text-gray-300">
-                {deviationsCount} Abweichung{deviationsCount === 1 ? '' : 'en'}
-              </span>
+              <>
+                <span className="text-gray-300">
+                  {deviationsCount} Abweichung{deviationsCount === 1 ? '' : 'en'}
+                </span>
+                {unsureCount > 0 && (
+                  <span className="text-amber-400">
+                    {unsureCount} unsicher
+                  </span>
+                )}
+              </>
             )}
           </>
         )}
@@ -475,14 +515,34 @@ export default function MarkerGrid({ rack, onComplete, onCancel }) {
             const sollOccupied = !!sollMap[u]
             // Effective ist for the representative HE (top unit for devices)
             const effectiveHe = device ? device.position : u
-            const istOccupied = istMap[effectiveHe] === 'belegt'
-            const hasOverride = userOverridesRef.current[effectiveHe] !== undefined
+            const rawValue = istMap[effectiveHe]
+            const userOverride = userOverridesRef.current[effectiveHe]
+            const hasOverride = userOverride !== undefined
+            const istOccupied = rawValue === 'belegt'
+            const isUnsure = !hasOverride && rawValue === 'unsicher'
 
             let dot = 'bg-gray-600'
             let label = 'leer'
-            if (sollOccupied && istOccupied) { dot = 'bg-emerald-500'; label = 'erkannt ✓' }
-            else if (sollOccupied && !istOccupied) { dot = 'bg-red-500'; label = 'fehlt' }
-            else if (!sollOccupied && istOccupied) { dot = 'bg-red-500'; label = 'unerwartet' }
+            let labelColor = 'text-gray-500'
+            if (sollOccupied && istOccupied) {
+              dot = 'bg-emerald-500'
+              label = 'erkannt ✓'
+              labelColor = 'text-emerald-400'
+            } else if (sollOccupied && !istOccupied) {
+              dot = 'bg-red-500'
+              label = 'fehlt'
+              labelColor = 'text-red-400'
+            } else if (!sollOccupied && istOccupied) {
+              dot = 'bg-red-500'
+              label = 'unerwartet'
+              labelColor = 'text-red-400'
+            }
+            // "unsicher" overrides the dot/label hint regardless of the soll/ist combo
+            if (isUnsure) {
+              dot = 'bg-amber-400'
+              label = sollOccupied ? 'unsicher – bitte prüfen' : 'unsicher'
+              labelColor = 'text-amber-400'
+            }
 
             return (
               <button
@@ -495,10 +555,7 @@ export default function MarkerGrid({ rack, onComplete, onCancel }) {
                 <span className="text-xs text-gray-200 flex-1 truncate">
                   {device ? device.name : <span className="text-gray-500 italic">Leer</span>}
                 </span>
-                <span className={`text-[10px] ${
-                  label === 'erkannt ✓' ? 'text-emerald-400' :
-                  label === 'fehlt' || label === 'unerwartet' ? 'text-red-400' : 'text-gray-500'
-                }`}>
+                <span className={`text-[10px] ${labelColor}`}>
                   {label}{hasOverride ? ' ✎' : ''}
                 </span>
               </button>
