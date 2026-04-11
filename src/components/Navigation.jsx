@@ -5,6 +5,7 @@ export default function Navigation({ currentView, onViewChange, racks, selectedR
     { id: 'cabling', label: 'Verkabelung', icon: '⚡' },
     { id: 'planning', label: 'Planungsmodus', icon: '📋' },
     { id: 'qrcodes', label: 'QR-Codes', icon: '⊞' },
+    { id: 'markerprint', label: 'AR-Marker drucken', icon: '◧' },
   ]
 
   return (
@@ -44,13 +45,20 @@ export default function Navigation({ currentView, onViewChange, racks, selectedR
         ))}
       </nav>
 
-      <div className="p-2 border-t border-gray-800">
+      <div className="p-2 border-t border-gray-800 space-y-2">
         <button
-          onClick={() => onViewChange('ar')}
+          onClick={() => onViewChange('armarker')}
           className="w-full px-4 py-3 rounded-lg flex items-center gap-3 text-sm bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 transition-colors font-medium"
         >
-          <span className="text-lg">📷</span>
-          AR-Modus starten
+          <span className="text-lg">🎯</span>
+          AR-Modus (Marker)
+        </button>
+        <button
+          onClick={() => onViewChange('ar')}
+          className="w-full px-4 py-2 rounded-lg flex items-center gap-3 text-xs bg-gray-800/50 text-gray-400 border border-gray-700 hover:bg-gray-800 transition-colors"
+        >
+          <span className="text-base">📷</span>
+          AR-Modus (manuell)
         </button>
       </div>
 
