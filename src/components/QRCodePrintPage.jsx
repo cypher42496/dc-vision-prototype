@@ -4,6 +4,7 @@ const racks = [
   { id: 'RACK-A01', name: 'Rack A01', location: 'RZ Frankfurt, Raum 2.03, Reihe A' },
   { id: 'RACK-A02', name: 'Rack A02', location: 'RZ Frankfurt, Raum 2.03, Reihe A' },
   { id: 'RACK-A03', name: 'Rack A03', location: 'RZ Frankfurt, Raum 2.03, Reihe A' },
+  { id: 'RACK-TEST', name: 'Test-Rack (9 HE)', location: 'Heimlabor – Prototyp-Evaluation' },
 ]
 
 export default function QRCodePrintPage({ onBack }) {

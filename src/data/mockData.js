@@ -443,6 +443,67 @@ export const mockData = {
           ports: []
         },
       ]
+    },
+
+    // ========== RACK-TEST: Physisches 9-HE-Testrack – für Prototyp-Evaluation ==========
+    {
+      id: 'RACK-TEST',
+      name: 'Test-Rack (9 HE)',
+      location: 'Heimlabor – Prototyp-Evaluation',
+      totalUnits: 9,
+      devices: [
+        {
+          id: 'TEST-DEV-001',
+          name: 'Steckdosenleiste',
+          manufacturer: 'Brennenstuhl',
+          model: 'Premium-Line 19" 1U',
+          formFactor: '1U',
+          position: 1,
+          height: 1,
+          status: 'aktiv',
+          plannedStatus: 'aktiv',
+          ports: []
+        },
+        {
+          id: 'TEST-DEV-002',
+          name: 'Patchpanel 24 Port',
+          manufacturer: 'deleyCON',
+          model: 'Cat6 24 Port 1U',
+          formFactor: '1U',
+          position: 2,
+          height: 1,
+          status: 'aktiv',
+          plannedStatus: 'aktiv',
+          ports: []
+        },
+        {
+          id: 'TEST-DEV-003',
+          name: 'Paketfilter',
+          manufacturer: 'Herstellername',
+          model: 'Modellbezeichnung',
+          formFactor: '1U',
+          position: 3,
+          height: 1,
+          status: 'aktiv',
+          plannedStatus: 'aktiv',
+          ports: []
+        },
+        // ABWEICHUNG: Switch ist auf HE 5 geplant, steht physisch aber auf HE 4
+        // HE 4 hat in den Mock-Daten KEINEN Eintrag → wird als "unerwartet" erkannt
+        // HE 5 hat diesen Eintrag → wird als "fehlt" erkannt
+        {
+          id: 'TEST-DEV-004',
+          name: 'Switch 24 Port',
+          manufacturer: 'Herstellername',
+          model: 'Modellbezeichnung',
+          formFactor: '1U',
+          position: 5,
+          height: 1,
+          status: 'geplant',
+          plannedStatus: 'aktiv',
+          ports: []
+        },
+      ]
     }
   ],
 
