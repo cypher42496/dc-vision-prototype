@@ -1,42 +1,40 @@
 import { QRCodeSVG } from 'qrcode.react'
 
-const racks = [
-  { id: 'RACK-A01', name: 'Rack A01', location: 'RZ Frankfurt, Raum 2.03, Reihe A' },
-  { id: 'RACK-A02', name: 'Rack A02', location: 'RZ Frankfurt, Raum 2.03, Reihe A' },
-  { id: 'RACK-A03', name: 'Rack A03', location: 'RZ Frankfurt, Raum 2.03, Reihe A' },
-  { id: 'RACK-TEST', name: 'Test-Rack (9 HE)', location: 'Heimlabor – Prototyp-Evaluation' },
-]
-
-export default function QRCodePrintPage({ onBack }) {
+export default function QRCodePrintPage({ racks, onBack }) {
   return (
-    <div>
-      <button
-        onClick={onBack}
-        className="text-cyan-400 hover:text-cyan-300 text-sm mb-6 flex items-center gap-1 print:hidden"
-      >
-        ← Zurück
-      </button>
-
-      <div className="mb-6 print:hidden">
-        <h2 className="text-2xl font-bold text-white">QR-Codes für Racks</h2>
-        <p className="text-sm text-gray-400 mt-1">
-          QR-Codes ausdrucken und an den entsprechenden Racks befestigen.
-        </p>
+    <div className="qr-print-root">
+      {/* Screen-only header */}
+      <div className="print:hidden">
         <button
-          onClick={() => window.print()}
-          className="mt-4 px-4 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-sm hover:bg-cyan-500/30 transition-colors"
+          onClick={onBack}
+          className="text-cyan-400 hover:text-cyan-300 text-sm mb-6 flex items-center gap-1"
         >
-          Seite drucken
+          ← Zurück
         </button>
+
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white">QR-Codes für Racks</h2>
+          <p className="text-sm text-gray-400 mt-1">
+            QR-Codes ausdrucken und an den entsprechenden Racks befestigen.
+            Beim Drucken werden zwei QR-Codes pro A4-Seite ausgegeben.
+          </p>
+          <button
+            onClick={() => window.print()}
+            className="mt-4 px-4 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-sm hover:bg-cyan-500/30 transition-colors"
+          >
+            Seite drucken
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Cards: on screen → grid; on print → single column with page breaks */}
+      <div className="qr-grid grid grid-cols-1 md:grid-cols-3 gap-6">
         {racks.map(rack => (
           <div
             key={rack.id}
-            className="bg-gray-900 border border-gray-800 rounded-lg p-6 flex flex-col items-center print:border-black print:bg-white print:rounded-none"
+            className="qr-card bg-gray-900 border border-gray-800 rounded-lg p-6 flex flex-col items-center print:border-2 print:border-black print:bg-white print:rounded-none"
           >
-            <div className="bg-white p-4 rounded-lg mb-4">
+            <div className="bg-white p-4 rounded-lg mb-4 print:p-2 print:mb-3">
               <QRCodeSVG
                 value={rack.id}
                 size={180}
@@ -44,12 +42,106 @@ export default function QRCodePrintPage({ onBack }) {
                 includeMargin={false}
               />
             </div>
-            <h3 className="text-lg font-bold text-white print:text-black">{rack.name}</h3>
-            <p className="text-sm text-gray-400 print:text-gray-600 mt-1">{rack.location}</p>
-            <p className="text-xs text-gray-500 print:text-gray-500 mt-2 font-mono">{rack.id}</p>
+            <h3 className="text-lg font-bold text-white print:text-black print:text-2xl">{rack.name}</h3>
+            <p className="text-sm text-gray-400 print:text-gray-700 print:text-base mt-1 text-center">
+              {rack.location}
+            </p>
+            <p className="text-xs text-gray-500 print:text-gray-500 print:text-sm mt-2 font-mono">
+              {rack.id}
+            </p>
           </div>
         ))}
       </div>
+
+      {/*
+        Print-mode overrides. The app's normal layout puts everything inside
+        a flex container with overflow-auto on <main>, which CLIPS content
+        in print mode and is the reason a 4th QR code never made it onto a
+        second physical page. We undo all of that here.
+      */}
+      <style>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 1.5cm;
+          }
+
+          /* Reset every container that would otherwise constrain content height
+             or hide overflow during print. */
+          html, body, #root {
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+            background: white !important;
+            color: black !important;
+          }
+
+          body > div,
+          #root > div {
+            display: block !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+          }
+
+          /* Hide the navigation sidebar in print */
+          aside {
+            display: none !important;
+          }
+
+          /* Let <main> flow freely instead of clipping its scroll area */
+          main {
+            display: block !important;
+            overflow: visible !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            flex: none !important;
+            width: 100% !important;
+          }
+
+          .qr-print-root {
+            display: block !important;
+            width: 100% !important;
+          }
+
+          /* On print: stack the cards vertically, single column, no gap.
+             We control vertical placement via card sizing + page-break-inside. */
+          .qr-grid {
+            display: block !important;
+            grid-template-columns: none !important;
+            gap: 0 !important;
+            width: 100% !important;
+          }
+
+          /* Each card: a fixed printable height that fits 2 per A4 page,
+             centered, with a forced "no split" rule so a card is never
+             broken across two physical pages. */
+          .qr-card {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+            height: 12cm !important;
+            margin: 0 0 1cm 0 !important;
+            padding: 0.8cm !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          /* Force the QR svg itself to a comfortable physical size for scanning */
+          .qr-card svg {
+            width: 7cm !important;
+            height: 7cm !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
