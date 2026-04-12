@@ -84,12 +84,13 @@ function classifyOccupancy(sample) {
 }
 
 const AR_VIEW_MODES = [
-  { id: 'normal', label: 'Standard' },
+  { id: 'normal', label: 'Abgleich' },
+  { id: 'manual', label: 'Manuell' },
   { id: 'security', label: '🔒 Sicherheit' },
   { id: 'environment', label: '🌿 Umwelt' },
 ]
 
-export default function MarkerGrid({ rack, onComplete, onCancel }) {
+export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode }) {
   const totalUnits = rack.totalUnits
   const videoRef = useRef(null)
   const overlayRef = useRef(null)
@@ -105,7 +106,14 @@ export default function MarkerGrid({ rack, onComplete, onCancel }) {
   const [, forceRerender] = useState(0)
   const [arViewMode, setArViewMode] = useState('normal')
   const arViewModeRef = useRef('normal')
-  const handleSetArViewMode = (m) => { setArViewMode(m); arViewModeRef.current = m }
+  const handleSetArViewMode = (m) => {
+    if (m === 'manual') {
+      onSwitchMode?.()
+      return
+    }
+    setArViewMode(m)
+    arViewModeRef.current = m
+  }
 
   // Precompute soll-map
   const sollMap = {}

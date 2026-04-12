@@ -128,20 +128,13 @@ export default function Navigation({ currentView, onViewChange, racks, selectedR
         ))}
       </nav>
 
-      <div className="p-2 border-t border-gray-800 space-y-2">
+      <div className="p-2 border-t border-gray-800">
         <button
-          onClick={() => onViewChange('armarker')}
+          onClick={() => onViewChange('ar')}
           className="w-full px-4 py-3 rounded-lg flex items-center gap-3 text-sm bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 transition-colors font-medium"
         >
           <span className="text-lg">🎯</span>
-          AR-Modus (Marker)
-        </button>
-        <button
-          onClick={() => onViewChange('ar')}
-          className="w-full px-4 py-2 rounded-lg flex items-center gap-3 text-xs bg-gray-800/50 text-gray-400 border border-gray-700 hover:bg-gray-800 transition-colors"
-        >
-          <span className="text-base">📷</span>
-          AR-Modus (manuell)
+          AR-Modus
         </button>
       </div>
 

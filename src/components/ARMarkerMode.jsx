@@ -1,6 +1,7 @@
 import { useState, Component } from 'react'
 import QRScanner from './QRScanner'
 import MarkerGrid from './MarkerGrid'
+import HEGrid from './HEGrid'
 import ComparisonSummary from './ComparisonSummary'
 
 class ARErrorBoundary extends Component {
@@ -12,7 +13,7 @@ class ARErrorBoundary extends Component {
     return { hasError: true }
   }
   componentDidCatch(error) {
-    console.warn('AR Marker Mode error:', error)
+    console.warn('AR Mode error:', error)
   }
   render() {
     if (this.state.hasError) {
@@ -39,10 +40,12 @@ class ARErrorBoundary extends Component {
   }
 }
 
-function ARMarkerModeInner({ racks, onExit }) {
+function ARModeInner({ racks, onExit }) {
   const [phase, setPhase] = useState('scanning') // scanning | grid | summary
   const [selectedRack, setSelectedRack] = useState(null)
   const [results, setResults] = useState(null)
+  // 'marker' = automatic detection via ArUco markers, 'manual' = manual HE tagging
+  const [gridMode, setGridMode] = useState('marker')
 
   const validRackIds = racks.map(r => r.id)
 
@@ -62,6 +65,7 @@ function ARMarkerModeInner({ racks, onExit }) {
   const handleScanNew = () => {
     setSelectedRack(null)
     setResults(null)
+    setGridMode('marker')
     setPhase('scanning')
   }
 
@@ -76,11 +80,22 @@ function ARMarkerModeInner({ racks, onExit }) {
   }
 
   if (phase === 'grid' && selectedRack) {
+    if (gridMode === 'manual') {
+      return (
+        <HEGrid
+          rack={selectedRack}
+          onComplete={handleGridComplete}
+          onCancel={onExit}
+          onSwitchMode={() => setGridMode('marker')}
+        />
+      )
+    }
     return (
       <MarkerGrid
         rack={selectedRack}
         onComplete={handleGridComplete}
         onCancel={onExit}
+        onSwitchMode={() => setGridMode('manual')}
       />
     )
   }
@@ -102,7 +117,7 @@ function ARMarkerModeInner({ racks, onExit }) {
 export default function ARMarkerMode({ racks, onExit }) {
   return (
     <ARErrorBoundary onExit={onExit}>
-      <ARMarkerModeInner racks={racks} onExit={onExit} />
+      <ARModeInner racks={racks} onExit={onExit} />
     </ARErrorBoundary>
   )
 }

@@ -27,7 +27,6 @@ import DeviceDetail from './components/DeviceDetail'
 import ComparisonView from './components/ComparisonView'
 import CablingView from './components/CablingView'
 import PlanningMode from './components/PlanningMode'
-import ARMode from './components/ARMode'
 import ARMarkerMode from './components/ARMarkerMode'
 import QRCodePrintPage from './components/QRCodePrintPage'
 import MarkerPrintPage from './components/MarkerPrintPage'
@@ -149,9 +148,6 @@ function App() {
 
   // AR mode is a fullscreen overlay
   if (currentView === 'ar') {
-    return <ARMode racks={data.racks} onExit={handleExitAR} />
-  }
-  if (currentView === 'armarker') {
     return <ARMarkerMode racks={data.racks} onExit={handleExitAR} />
   }
 

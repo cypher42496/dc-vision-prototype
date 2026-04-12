@@ -3,8 +3,8 @@ import DeviceEditor from './DeviceEditor'
 
 const VIEW_MODES = [
   { id: 'normal', label: 'Standard' },
-  { id: 'security', label: 'Sicherheit' },
-  { id: 'environment', label: 'Umwelt' },
+  { id: 'security', label: '🔒 Sicherheit' },
+  { id: 'environment', label: '🌿 Umwelt' },
 ]
 
 export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDevice, onDeleteDevice }) {
@@ -187,8 +187,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
                 : 'text-gray-400 hover:text-gray-200 border border-transparent'
             }`}
           >
-            {mode.id === 'security' && '🔒 '}
-            {mode.id === 'environment' && '🌿 '}
             {mode.label}
           </button>
         ))}

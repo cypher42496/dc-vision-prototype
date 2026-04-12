@@ -1,6 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 
-export default function HEGrid({ rack, onComplete, onCancel }) {
+const HE_VIEW_MODES = [
+  { id: 'normal', label: 'Abgleich' },
+  { id: 'manual', label: 'Manuell' },
+]
+
+export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
   const totalUnits = rack.totalUnits
   const videoRef = useRef(null)
   const [hasCamera, setHasCamera] = useState(false)
@@ -137,17 +142,39 @@ export default function HEGrid({ rack, onComplete, onCancel }) {
       {hasCamera && <div className="absolute inset-0 bg-black/40" />}
 
       {/* Header */}
-      <div className="relative z-10 bg-black/60 backdrop-blur-sm p-3 flex items-center justify-between shrink-0">
-        <div>
-          <h2 className="text-lg font-bold text-white">{rack.name} – Soll-/Ist-Abgleich</h2>
-          <p className="text-xs text-gray-300">{rack.location}</p>
+      <div className="relative z-10 bg-black/60 backdrop-blur-sm p-3 flex flex-col gap-2 shrink-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-white">{rack.name} – Manueller Abgleich</h2>
+            <p className="text-xs text-gray-300">{rack.location}</p>
+          </div>
+          <button
+            onClick={onCancel}
+            className="px-3 py-1.5 bg-gray-800/80 text-gray-300 border border-gray-700 rounded-lg text-sm hover:bg-gray-700 transition-colors"
+          >
+            Abbrechen
+          </button>
         </div>
-        <button
-          onClick={onCancel}
-          className="px-3 py-1.5 bg-gray-800/80 text-gray-300 border border-gray-700 rounded-lg text-sm hover:bg-gray-700 transition-colors"
-        >
-          Abbrechen
-        </button>
+        {/* View mode toggle */}
+        {onSwitchMode && (
+          <div className="flex gap-1 bg-black/40 rounded-lg p-0.5 w-fit">
+            {HE_VIEW_MODES.map(mode => (
+              <button
+                key={mode.id}
+                onClick={() => {
+                  if (mode.id !== 'manual') onSwitchMode()
+                }}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                  mode.id === 'manual'
+                    ? 'bg-cyan-500/30 text-cyan-400'
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* HE Grid */}
