@@ -1,4 +1,9 @@
-export default function RackView({ rack, onDeviceClick }) {
+import { useState } from 'react'
+import DeviceEditor from './DeviceEditor'
+
+export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDevice, onDeleteDevice }) {
+  const [editorState, setEditorState] = useState(null) // null | { mode: 'add'|'edit', device?, position? }
+
   if (!rack) return null
 
   const UNIT_HEIGHT = 28
@@ -49,23 +54,51 @@ export default function RackView({ rack, onDeviceClick }) {
         </div>
         {/* Cell */}
         {device ? (
-          <button
-            onClick={() => onDeviceClick(device.id)}
-            className={`flex-1 flex items-center gap-3 px-3 border rounded transition-colors cursor-pointer text-left ${getDeviceColor(device)}`}
+          <div
+            className={`flex-1 flex items-center gap-3 px-3 border rounded transition-colors text-left ${getDeviceColor(device)}`}
           >
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-white truncate">{device.name}</div>
-              <div className="text-xs text-white/70 truncate">{device.manufacturer} {device.model}</div>
-            </div>
-            <div className="text-right shrink-0">
-              <div className="text-[10px] text-white/60 uppercase">{device.formFactor}</div>
-              <div className="text-[10px] text-white/80">{getStatusLabel(device)}</div>
-            </div>
-          </button>
-        ) : (
-          <div className="flex-1 bg-gray-800/40 border border-gray-800 rounded flex items-center justify-center">
-            <span className="text-[10px] text-gray-600">leer</span>
+            <button
+              onClick={() => onDeviceClick(device.id)}
+              className="flex-1 flex items-center gap-3 min-w-0 cursor-pointer text-left"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-white truncate">{device.name}</div>
+                <div className="text-xs text-white/70 truncate">{device.manufacturer} {device.model}</div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-[10px] text-white/60 uppercase">{device.formFactor}</div>
+                <div className="text-[10px] text-white/80">{getStatusLabel(device)}</div>
+              </div>
+            </button>
+            {onUpdateDevice && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setEditorState({ mode: 'edit', device })
+                }}
+                title="Gerät bearbeiten"
+                className="shrink-0 w-7 h-7 flex items-center justify-center rounded bg-black/30 hover:bg-black/50 text-white text-xs transition-colors"
+              >
+                ✎
+              </button>
+            )}
           </div>
+        ) : (
+          onAddDevice ? (
+            <button
+              onClick={() => setEditorState({ mode: 'add', position: u })}
+              title={`Gerät auf HE ${u} hinzufügen`}
+              className="flex-1 bg-gray-800/40 border border-gray-800 rounded flex items-center justify-center hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-colors group"
+            >
+              <span className="text-[10px] text-gray-600 group-hover:text-cyan-400">
+                + leer
+              </span>
+            </button>
+          ) : (
+            <div className="flex-1 bg-gray-800/40 border border-gray-800 rounded flex items-center justify-center">
+              <span className="text-[10px] text-gray-600">leer</span>
+            </div>
+          )
         )}
       </div>
     )
@@ -79,9 +112,19 @@ export default function RackView({ rack, onDeviceClick }) {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white">{rack.name}</h2>
-        <p className="text-sm text-gray-400 mt-1">{rack.location}</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white">{rack.name}</h2>
+          <p className="text-sm text-gray-400 mt-1">{rack.location}</p>
+        </div>
+        {onAddDevice && (
+          <button
+            onClick={() => setEditorState({ mode: 'add' })}
+            className="shrink-0 px-4 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-sm hover:bg-cyan-500/30 transition-colors"
+          >
+            + Gerät hinzufügen
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -141,6 +184,27 @@ export default function RackView({ rack, onDeviceClick }) {
       <div className="text-xs text-gray-500 mt-1">
         Belegung: {usedUnits} / {rack.totalUnits} HE ({Math.round((usedUnits / rack.totalUnits) * 100)}%)
       </div>
+
+      {editorState && (
+        <DeviceEditor
+          rack={rack}
+          device={editorState.mode === 'edit' ? editorState.device : undefined}
+          initialPosition={editorState.mode === 'add' ? editorState.position : undefined}
+          onSave={(device) => {
+            if (editorState.mode === 'edit') {
+              onUpdateDevice(device.id, device)
+            } else {
+              onAddDevice(rack.id, device)
+            }
+            setEditorState(null)
+          }}
+          onDelete={(deviceId) => {
+            onDeleteDevice(deviceId)
+            setEditorState(null)
+          }}
+          onCancel={() => setEditorState(null)}
+        />
+      )}
     </div>
   )
 }

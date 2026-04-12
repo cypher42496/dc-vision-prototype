@@ -1,4 +1,4 @@
-export default function Navigation({ currentView, onViewChange, racks, selectedRackId, onRackChange }) {
+export default function Navigation({ currentView, onViewChange, racks, selectedRackId, onRackChange, onResetData }) {
   const navItems = [
     { id: 'rack', label: 'Rack-Übersicht', icon: '▦' },
     { id: 'comparison', label: 'Soll/Ist-Vergleich', icon: '⇄' },
@@ -61,6 +61,18 @@ export default function Navigation({ currentView, onViewChange, racks, selectedR
           AR-Modus (manuell)
         </button>
       </div>
+
+      {onResetData && (
+        <div className="px-2 pb-2">
+          <button
+            onClick={onResetData}
+            className="w-full px-3 py-2 rounded-lg text-xs text-gray-500 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-colors"
+            title="Lokale Änderungen verwerfen"
+          >
+            ↺ Daten zurücksetzen
+          </button>
+        </div>
+      )}
 
       <div className="p-4 border-t border-gray-800 text-xs text-gray-600">
         Masterarbeit – AR/DCIM Prototyp
