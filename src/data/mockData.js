@@ -17,6 +17,8 @@ export const mockData = {
           height: 1,
           status: 'aktiv',
           plannedStatus: 'aktiv',
+          securityInfo: 'BSI-Grundschutz-konform (Baustein NET.3.2). Zugriffskontrolle: RBAC + TACACS+. Firmware-Stand geprüft Q1/2026.',
+          environmentInfo: 'Max. Leistungsaufnahme: 450 W. Betriebstemperatur: 0–45 °C. RoHS-konform. WEEE-Reg.-Nr. DE 12345678.',
           ports: [
             { id: 'PORT-001', name: 'Gi0/1', type: 'SFP+', connectedTo: 'PORT-020', cableId: 'K-2024-0001', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-002', name: 'Gi0/2', type: 'SFP+', connectedTo: 'PORT-021', cableId: 'K-2024-0002', status: 'verbunden', plannedStatus: 'verbunden' },
@@ -53,6 +55,8 @@ export const mockData = {
           height: 2,
           status: 'aktiv',
           plannedStatus: 'aktiv',
+          securityInfo: 'TPM 2.0 aktiv. Secure Boot aktiviert. Verschlüsselung: BitLocker AES-256. Letzter Penetrationstest: 03/2026.',
+          environmentInfo: 'Max. Leistungsaufnahme: 750 W (2x PSU redundant). Betriebstemperatur: 10–35 °C. Energy Star 3.0 zertifiziert.',
           ports: [
             { id: 'PORT-030', name: 'eth0', type: 'RJ45', connectedTo: 'PORT-003', cableId: 'K-2024-0003', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-031', name: 'eth1', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
@@ -85,6 +89,7 @@ export const mockData = {
           height: 2,
           status: 'aktiv',
           plannedStatus: 'aktiv',
+          securityInfo: 'Datenbank-Verschlüsselung: TDE (AES-256). Zugriff nur über Jump-Host. Audit-Logging aktiviert (Syslog).',
           ports: [
             { id: 'PORT-050', name: 'eth0', type: 'RJ45', connectedTo: 'PORT-022', cableId: 'K-2024-0005', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-051', name: 'eth1', type: 'RJ45', connectedTo: 'PORT-023', cableId: 'K-2024-0006', status: 'verbunden', plannedStatus: 'verbunden' },
@@ -146,6 +151,8 @@ export const mockData = {
           height: 4,
           status: 'aktiv',
           plannedStatus: 'aktiv',
+          securityInfo: 'Verschlüsselung: NSE (NetApp Storage Encryption) + NVE. FIPS 140-2 Level 2 validiert.',
+          environmentInfo: 'Max. Leistungsaufnahme: 1.800 W. Schallpegel: 72 dB(A). Kühlluftbedarf: 850 m³/h. RoHS/REACH-konform.',
           ports: [
             { id: 'PORT-090', name: 'FC-A', type: 'SFP+', connectedTo: 'PORT-080', cableId: 'K-2024-0010', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-091', name: 'FC-B', type: 'SFP+', connectedTo: 'PORT-081', cableId: 'K-2024-0011', status: 'verbunden', plannedStatus: 'verbunden' },
@@ -162,6 +169,7 @@ export const mockData = {
           height: 3,
           status: 'aktiv',
           plannedStatus: 'aktiv',
+          environmentInfo: 'Max. Leistungsaufnahme: 5.000 VA / 4.500 W. Batterie: Blei-Säure (VRLA). Entsorgung gemäß BattG. Wirkungsgrad: 97 %.',
           ports: []
         },
         {
@@ -297,6 +305,8 @@ export const mockData = {
           status: 'aktiv',
           plannedStatus: 'aktiv',
           plannedModel: 'FortiGate 400F',
+          securityInfo: 'IPS/IDS aktiviert. SSL-Inspection: Deep Packet Inspection. VPN: IPsec + SSL. FortiGuard-Lizenzen gültig bis 12/2026.',
+          environmentInfo: 'Max. Leistungsaufnahme: 200 W. Betriebstemperatur: 0–40 °C. RoHS-konform.',
           ports: [
             { id: 'PORT-260', name: 'wan1', type: 'RJ45', connectedTo: 'PORT-213', cableId: 'K-2024-0018', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-261', name: 'wan2', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'verbunden' },

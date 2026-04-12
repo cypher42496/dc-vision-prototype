@@ -51,16 +51,16 @@ export default function MarkerPrintPage({ onBack }) {
   const handlePrint = () => window.print()
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="marker-print-root max-w-4xl mx-auto">
       {/* Screen-only header */}
       <div className="print:hidden mb-6">
         <button
           onClick={onBack}
-          className="text-cyan-400 hover:text-cyan-300 text-sm mb-4"
+          className="text-cyan-400 hover:text-cyan-300 text-sm mb-4 flex items-center gap-1"
         >
           ← Zurück
         </button>
-        <h2 className="text-2xl font-bold text-gray-100">AR-Marker drucken</h2>
+        <h2 className="text-2xl font-bold text-gray-100">AR-Marker</h2>
         <p className="text-sm text-gray-400 mt-1 max-w-2xl">
           Diese zwei Marker ausdrucken (möglichst auf weißem Papier, am besten 120&nbsp;g+),
           ausschneiden und am physischen Rack befestigen. Sie dienen als Anker für die
@@ -68,7 +68,7 @@ export default function MarkerPrintPage({ onBack }) {
         </p>
         <button
           onClick={handlePrint}
-          className="mt-4 px-4 py-2 bg-cyan-500 text-white rounded-lg text-sm font-medium hover:bg-cyan-400 transition-colors"
+          className="mt-4 px-4 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-sm hover:bg-cyan-500/30 transition-colors"
         >
           Seite drucken
         </button>
@@ -89,7 +89,7 @@ export default function MarkerPrintPage({ onBack }) {
       </div>
 
       {/* Markers – visible on both screen and print */}
-      <div className="flex flex-col gap-8 items-center print:gap-12">
+      <div className="marker-grid flex flex-col gap-8 items-center">
         {!ready && (
           <div className="text-gray-400 text-sm">Marker werden generiert …</div>
         )}
@@ -98,7 +98,7 @@ export default function MarkerPrintPage({ onBack }) {
           return (
             <div
               key={marker.id}
-              className="bg-white p-4 rounded-lg print:rounded-none print:p-0 flex flex-col items-center"
+              className="marker-card bg-white p-4 rounded-lg print:rounded-none print:p-0 flex flex-col items-center print:border-2 print:border-black"
             >
               <div
                 className="marker-svg"
@@ -106,12 +106,12 @@ export default function MarkerPrintPage({ onBack }) {
                 dangerouslySetInnerHTML={{ __html: svg || '' }}
               />
               <div className="mt-3 text-center text-black">
-                <div className="font-bold text-sm">{marker.label}</div>
-                <div className="text-xs">{marker.position}</div>
-                <div className="text-[10px] text-gray-500 mt-1">
+                <div className="font-bold text-sm print:text-lg">{marker.label}</div>
+                <div className="text-xs print:text-base">{marker.position}</div>
+                <div className="text-[10px] print:text-sm text-gray-500 mt-1">
                   ID {marker.id} · ARUCO_MIP_36h12 · 5×5&nbsp;cm
                 </div>
-                <div className="text-[10px] text-gray-600 italic mt-1">
+                <div className="text-[10px] print:text-sm text-gray-600 italic mt-1">
                   {marker.hint}
                 </div>
               </div>
@@ -120,7 +120,7 @@ export default function MarkerPrintPage({ onBack }) {
         })}
       </div>
 
-      {/* Ensure printed markers are exactly 5cm and SVGs fill their box */}
+      {/* Print-mode overrides – same pattern as QRCodePrintPage */}
       <style>{`
         .marker-svg svg {
           width: 100%;
@@ -128,9 +128,82 @@ export default function MarkerPrintPage({ onBack }) {
           display: block;
           image-rendering: pixelated;
         }
+
         @media print {
-          body { background: white !important; }
-          @page { margin: 1.5cm; }
+          @page {
+            size: A4 portrait;
+            margin: 1.5cm;
+          }
+
+          html, body, #root {
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+            background: white !important;
+            color: black !important;
+          }
+
+          body > div,
+          #root > div {
+            display: block !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+          }
+
+          aside {
+            display: none !important;
+          }
+
+          main {
+            display: block !important;
+            overflow: visible !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            flex: none !important;
+            width: 100% !important;
+          }
+
+          .marker-print-root {
+            display: block !important;
+            width: 100% !important;
+          }
+
+          .marker-grid {
+            display: block !important;
+            gap: 0 !important;
+            width: 100% !important;
+          }
+
+          .marker-card {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+            height: 12cm !important;
+            margin: 0 0 1cm 0 !important;
+            padding: 0.8cm !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            background: white !important;
+          }
+
+          .marker-svg {
+            width: 7cm !important;
+            height: 7cm !important;
+          }
+
+          .marker-svg svg {
+            width: 7cm !important;
+            height: 7cm !important;
+          }
         }
       `}</style>
     </div>

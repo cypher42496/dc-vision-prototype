@@ -21,6 +21,8 @@ export default function DeviceEditor({ rack, device, initialPosition, onSave, on
     position: device?.position ?? initialPosition ?? 1,
     status: device?.status ?? 'aktiv',
     plannedStatus: device?.plannedStatus ?? 'aktiv',
+    securityInfo: device?.securityInfo ?? '',
+    environmentInfo: device?.environmentInfo ?? '',
   }))
 
   // Build occupancy map of all OTHER devices to check collisions against
@@ -75,6 +77,8 @@ export default function DeviceEditor({ rack, device, initialPosition, onSave, on
       height: Number(form.height),
       status: form.status,
       plannedStatus: form.plannedStatus,
+      securityInfo: form.securityInfo.trim() || undefined,
+      environmentInfo: form.environmentInfo.trim() || undefined,
       ports: device?.ports ?? [],
     }
     onSave(payload)
@@ -175,6 +179,26 @@ export default function DeviceEditor({ rack, device, initialPosition, onSave, on
               </select>
             </Field>
           </div>
+
+          <Field label="Sicherheitsrelevante Informationen">
+            <textarea
+              value={form.securityInfo}
+              onChange={(e) => setForm({ ...form, securityInfo: e.target.value })}
+              placeholder="z.B. BSI-Grundschutz-konform, Verschlüsselung, Zugriffskontrolle …"
+              rows={2}
+              className={inputClass + ' resize-y'}
+            />
+          </Field>
+
+          <Field label="Umweltrelevante Informationen">
+            <textarea
+              value={form.environmentInfo}
+              onChange={(e) => setForm({ ...form, environmentInfo: e.target.value })}
+              placeholder="z.B. Leistungsaufnahme, RoHS-Konformität, Entsorgungshinweis …"
+              rows={2}
+              className={inputClass + ' resize-y'}
+            />
+          </Field>
 
           {error && (
             <div className="px-3 py-2 bg-red-500/10 border border-red-500/30 rounded text-xs text-red-400">

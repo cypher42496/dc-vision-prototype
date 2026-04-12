@@ -97,6 +97,42 @@ function App() {
     }))
   }
 
+  const handleAddRack = (rack) => {
+    setData(prev => ({
+      ...prev,
+      racks: [...prev.racks, rack]
+    }))
+    setSelectedRackId(rack.id)
+    setCurrentView('rack')
+  }
+
+  const handleDeleteRack = (rackId) => {
+    if (typeof window !== 'undefined') {
+      const rack = data.racks.find(r => r.id === rackId)
+      const ok = window.confirm(`Rack "${rack?.name}" wirklich löschen? Alle Geräte und zugehörige Kabel werden entfernt.`)
+      if (!ok) return
+    }
+    setData(prev => {
+      // Collect all device IDs in this rack for cable cleanup
+      const rack = prev.racks.find(r => r.id === rackId)
+      const deviceIds = new Set(rack?.devices.map(d => d.id) ?? [])
+      const portIds = new Set(rack?.devices.flatMap(d => (d.ports ?? []).map(p => p.id)) ?? [])
+      return {
+        ...prev,
+        racks: prev.racks.filter(r => r.id !== rackId),
+        cables: prev.cables.filter(
+          c => !portIds.has(c.sourcePort) && !portIds.has(c.targetPort)
+        )
+      }
+    })
+    // Select another rack if available
+    setSelectedRackId(prev => {
+      const remaining = data.racks.filter(r => r.id !== rackId)
+      if (remaining.length > 0) return remaining[0].id
+      return ''
+    })
+  }
+
   const handleResetData = () => {
     if (typeof window !== 'undefined') {
       const ok = window.confirm(
@@ -181,6 +217,8 @@ function App() {
         racks={data.racks}
         selectedRackId={selectedRackId}
         onRackChange={setSelectedRackId}
+        onAddRack={handleAddRack}
+        onDeleteRack={handleDeleteRack}
         onResetData={handleResetData}
       />
       <main className="flex-1 overflow-auto p-6">

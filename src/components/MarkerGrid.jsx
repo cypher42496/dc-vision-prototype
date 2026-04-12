@@ -83,6 +83,12 @@ function classifyOccupancy(sample) {
   return 'unsicher'
 }
 
+const AR_VIEW_MODES = [
+  { id: 'normal', label: 'Standard' },
+  { id: 'security', label: '🔒 Sicherheit' },
+  { id: 'environment', label: '🌿 Umwelt' },
+]
+
 export default function MarkerGrid({ rack, onComplete, onCancel }) {
   const totalUnits = rack.totalUnits
   const videoRef = useRef(null)
@@ -94,11 +100,12 @@ export default function MarkerGrid({ rack, onComplete, onCancel }) {
   const [hasCamera, setHasCamera] = useState(false)
   const [status, setStatus] = useState('Kamera starten …')
   const [markersSeen, setMarkersSeen] = useState({ top: false, bottom: false })
-  // istMap: { [he: number]: 'belegt' | 'leer' }
   const [istMap, setIstMap] = useState({})
-  // userOverrides: keys = HE numbers the user has manually toggled
   const userOverridesRef = useRef({})
   const [, forceRerender] = useState(0)
+  const [arViewMode, setArViewMode] = useState('normal')
+  const arViewModeRef = useRef('normal')
+  const handleSetArViewMode = (m) => { setArViewMode(m); arViewModeRef.current = m }
 
   // Precompute soll-map
   const sollMap = {}
@@ -298,24 +305,39 @@ export default function MarkerGrid({ rack, onComplete, onCancel }) {
           })
 
           // Draw each HE quad with state color
+          const currentMode = arViewModeRef.current
           for (const q of quads) {
             const userOverride = userOverridesRef.current[q.u]
-            const rawIst = newIst[q.u]                           // belegt | leer | unsicher
+            const rawIst = newIst[q.u]
             const effectiveIst = userOverride ?? rawIst
-            // For comparison purposes, "unsicher" counts as "leer" (conservative default)
             const istOccupied = effectiveIst === 'belegt'
             const isUnsure = !userOverride && rawIst === 'unsicher'
             const sollOccupied = !!sollMap[q.u]
+            const device = sollMap[q.u]
 
             let fill, stroke
-            if (sollOccupied && istOccupied) { fill = 'rgba(16,185,129,0.28)'; stroke = 'rgba(16,185,129,0.9)' }
-            else if (sollOccupied && !istOccupied) { fill = 'rgba(239,68,68,0.28)'; stroke = 'rgba(239,68,68,0.9)' }
-            else if (!sollOccupied && istOccupied) { fill = 'rgba(239,68,68,0.28)'; stroke = 'rgba(239,68,68,0.9)' }
-            else { fill = 'rgba(100,116,139,0.12)'; stroke = 'rgba(148,163,184,0.5)' }
 
-            // Unsicher cells get an extra yellow ring on top, regardless of soll/ist combo
-            if (isUnsure) {
-              stroke = 'rgba(251,191,36,0.95)' // amber-400
+            if (currentMode === 'security' || currentMode === 'environment') {
+              // Audit modes: blue if device has info, gray otherwise
+              const infoField = currentMode === 'security' ? 'securityInfo' : 'environmentInfo'
+              const hasInfo = device && device[infoField]
+              if (hasInfo) {
+                fill = 'rgba(59,130,246,0.35)'; stroke = 'rgba(59,130,246,0.95)'
+              } else if (device) {
+                fill = 'rgba(100,116,139,0.15)'; stroke = 'rgba(148,163,184,0.5)'
+              } else {
+                fill = 'rgba(100,116,139,0.05)'; stroke = 'rgba(148,163,184,0.25)'
+              }
+            } else {
+              // Normal soll/ist comparison mode
+              if (sollOccupied && istOccupied) { fill = 'rgba(16,185,129,0.28)'; stroke = 'rgba(16,185,129,0.9)' }
+              else if (sollOccupied && !istOccupied) { fill = 'rgba(239,68,68,0.28)'; stroke = 'rgba(239,68,68,0.9)' }
+              else if (!sollOccupied && istOccupied) { fill = 'rgba(239,68,68,0.28)'; stroke = 'rgba(239,68,68,0.9)' }
+              else { fill = 'rgba(100,116,139,0.12)'; stroke = 'rgba(148,163,184,0.5)' }
+
+              if (isUnsure) {
+                stroke = 'rgba(251,191,36,0.95)' // amber-400
+              }
             }
 
             ctxOverlay.beginPath()
@@ -458,17 +480,37 @@ export default function MarkerGrid({ rack, onComplete, onCancel }) {
       />
 
       {/* Header */}
-      <div className="relative z-10 bg-black/70 backdrop-blur-sm p-3 flex items-center justify-between shrink-0">
-        <div className="min-w-0">
-          <h2 className="text-base font-bold text-white truncate">{rack.name} – AR-Abgleich</h2>
-          <p className="text-xs text-gray-300 truncate">{rack.location}</p>
+      <div className="relative z-10 bg-black/70 backdrop-blur-sm p-3 flex flex-col gap-2 shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-white truncate">{rack.name} – AR-Abgleich</h2>
+            <p className="text-xs text-gray-300 truncate">{rack.location}</p>
+          </div>
+          <button
+            onClick={onCancel}
+            className="px-3 py-1.5 bg-gray-800/80 text-gray-300 border border-gray-700 rounded-lg text-sm hover:bg-gray-700 transition-colors shrink-0"
+          >
+            Abbrechen
+          </button>
         </div>
-        <button
-          onClick={onCancel}
-          className="px-3 py-1.5 bg-gray-800/80 text-gray-300 border border-gray-700 rounded-lg text-sm hover:bg-gray-700 transition-colors shrink-0"
-        >
-          Abbrechen
-        </button>
+        {/* View mode toggle */}
+        <div className="flex gap-1 bg-black/40 rounded-lg p-0.5 w-fit">
+          {AR_VIEW_MODES.map(mode => (
+            <button
+              key={mode.id}
+              onClick={() => handleSetArViewMode(mode.id)}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                arViewMode === mode.id
+                  ? mode.id === 'normal'
+                    ? 'bg-cyan-500/30 text-cyan-400'
+                    : 'bg-blue-500/30 text-blue-400'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Status strip */}
@@ -504,16 +546,43 @@ export default function MarkerGrid({ rack, onComplete, onCancel }) {
       {/* Bottom collapsible device list (overrides) */}
       <div className="relative z-10 max-h-[40vh] overflow-auto bg-black/70 backdrop-blur-sm border-t border-gray-800">
         <div className="px-3 py-2 text-[11px] text-gray-400 uppercase tracking-wider">
-          Erkennung (tippen zum Korrigieren)
+          {arViewMode === 'normal'
+            ? 'Erkennung (tippen zum Korrigieren)'
+            : arViewMode === 'security'
+              ? 'Sicherheitsrelevante Informationen'
+              : 'Umweltrelevante Informationen'}
         </div>
         <div className="px-3 pb-3 space-y-1">
           {Array.from({ length: totalUnits }, (_, i) => totalUnits - i).map(u => {
             const device = sollMap[u]
-            // Only show top unit of multi-HE devices, plus empty HEs
             if (device && u !== device.position + device.height - 1) return null
 
+            if (arViewMode !== 'normal') {
+              // Audit mode list: only show devices (skip empty HEs)
+              if (!device) return null
+              const infoField = arViewMode === 'security' ? 'securityInfo' : 'environmentInfo'
+              const hasInfo = !!device[infoField]
+              return (
+                <div
+                  key={u}
+                  className="w-full flex items-start gap-2 px-2 py-1.5 rounded"
+                >
+                  <span className="text-[10px] text-gray-500 font-mono w-6 text-right shrink-0 pt-0.5">{u}</span>
+                  <span className={`w-2 h-2 rounded-full shrink-0 mt-1 ${hasInfo ? 'bg-blue-500' : 'bg-gray-600'}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-gray-200 truncate">{device.name}</div>
+                    {hasInfo ? (
+                      <div className="text-[10px] text-blue-300 mt-0.5 line-clamp-2">{device[infoField]}</div>
+                    ) : (
+                      <div className="text-[10px] text-gray-600 mt-0.5 italic">Keine Info hinterlegt</div>
+                    )}
+                  </div>
+                </div>
+              )
+            }
+
+            // Normal mode
             const sollOccupied = !!sollMap[u]
-            // Effective ist for the representative HE (top unit for devices)
             const effectiveHe = device ? device.position : u
             const rawValue = istMap[effectiveHe]
             const userOverride = userOverridesRef.current[effectiveHe]
@@ -537,7 +606,6 @@ export default function MarkerGrid({ rack, onComplete, onCancel }) {
               label = 'unerwartet'
               labelColor = 'text-red-400'
             }
-            // "unsicher" overrides the dot/label hint regardless of the soll/ist combo
             if (isUnsure) {
               dot = 'bg-amber-400'
               label = sollOccupied ? 'unsicher – bitte prüfen' : 'unsicher'
