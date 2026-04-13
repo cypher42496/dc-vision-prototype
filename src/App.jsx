@@ -36,6 +36,7 @@ function App() {
   const [selectedRackId, setSelectedRackId] = useState('RACK-A01')
   const [selectedDeviceId, setSelectedDeviceId] = useState(null)
   const [data, setData] = useState(loadInitialData)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Persist data to localStorage on every change so device edits survive reloads.
   useEffect(() => {
@@ -205,19 +206,52 @@ function App() {
     }
   }
 
+  // Close sidebar when navigating on mobile
+  const handleViewChange = (view) => {
+    setCurrentView(view)
+    setSidebarOpen(false)
+  }
+
   return (
     <div className="flex h-screen bg-gray-950 text-gray-200">
-      <Navigation
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        racks={data.racks}
-        selectedRackId={selectedRackId}
-        onRackChange={setSelectedRackId}
-        onAddRack={handleAddRack}
-        onDeleteRack={handleDeleteRack}
-        onResetData={handleResetData}
-      />
-      <main className="flex-1 overflow-auto p-6">
+      {/* Mobile hamburger button */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="fixed top-3 left-3 z-40 md:hidden p-2 bg-gray-900 border border-gray-800 rounded-lg text-gray-300 hover:text-white"
+        aria-label="Menü öffnen"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {/* Backdrop overlay on mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar: always visible on md+, slide-in on mobile */}
+      <div className={`
+        fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 ease-in-out
+        md:relative md:translate-x-0 md:transform-none
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <Navigation
+          currentView={currentView}
+          onViewChange={handleViewChange}
+          racks={data.racks}
+          selectedRackId={selectedRackId}
+          onRackChange={setSelectedRackId}
+          onAddRack={handleAddRack}
+          onDeleteRack={handleDeleteRack}
+          onResetData={handleResetData}
+        />
+      </div>
+
+      <main className="flex-1 overflow-auto p-4 pt-14 md:p-6 md:pt-6">
         {renderView()}
       </main>
     </div>

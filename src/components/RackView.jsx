@@ -5,6 +5,7 @@ const VIEW_MODES = [
   { id: 'normal', label: 'Standard' },
   { id: 'security', label: '🔒 Sicherheit' },
   { id: 'environment', label: '🌿 Umwelt' },
+  { id: 'network', label: '🔌 Netzwerk' },
 ]
 
 export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDevice, onDeleteDevice }) {
@@ -16,6 +17,11 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
   const UNIT_HEIGHT = 28
   const GAP = 2
 
+  // --- Helper: check if a device has network ports ---
+  const hasNetworkPorts = (device) => device.ports && device.ports.length > 0
+  const getConnectedPortCount = (device) =>
+    (device.ports ?? []).filter(p => p.connectedTo).length
+
   // --- Color logic depends on view mode ---
   const getDeviceColor = (device) => {
     if (viewMode === 'security') {
@@ -25,6 +31,11 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     }
     if (viewMode === 'environment') {
       return device.environmentInfo
+        ? 'bg-blue-500/70 border-blue-400'
+        : 'bg-gray-700/50 border-gray-600'
+    }
+    if (viewMode === 'network') {
+      return hasNetworkPorts(device)
         ? 'bg-blue-500/70 border-blue-400'
         : 'bg-gray-700/50 border-gray-600'
     }
@@ -45,12 +56,18 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     if (viewMode === 'environment') {
       return device.environmentInfo ? 'Info vorhanden' : 'Keine Info'
     }
+    if (viewMode === 'network') {
+      if (!hasNetworkPorts(device)) return 'Keine Ports'
+      const connected = getConnectedPortCount(device)
+      const total = device.ports.length
+      return `${connected}/${total} verbunden`
+    }
     if (device.status !== device.plannedStatus || device.plannedModel) return 'Abweichung'
     if (device.status === 'geplant') return 'Geplant'
     return 'Aktiv'
   }
 
-  // Sub-line shown in audit modes
+  // Sub-line shown in audit/network modes
   const getAuditSnippet = (device) => {
     if (viewMode === 'security' && device.securityInfo) {
       return device.securityInfo.length > 60
@@ -61,6 +78,15 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
       return device.environmentInfo.length > 60
         ? device.environmentInfo.slice(0, 60) + '…'
         : device.environmentInfo
+    }
+    if (viewMode === 'network' && hasNetworkPorts(device)) {
+      const portSummary = device.ports
+        .slice(0, 3)
+        .map(p => `${p.name} (${p.type})`)
+        .join(', ')
+      return device.ports.length > 3
+        ? portSummary + ` +${device.ports.length - 3} weitere`
+        : portSummary
     }
     return null
   }
@@ -155,6 +181,9 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
   // Audit mode stats
   const securityCount = rack.devices.filter(d => d.securityInfo).length
   const environmentCount = rack.devices.filter(d => d.environmentInfo).length
+  const networkDeviceCount = rack.devices.filter(d => hasNetworkPorts(d)).length
+  const totalPorts = rack.devices.reduce((sum, d) => sum + (d.ports?.length ?? 0), 0)
+  const connectedPorts = rack.devices.reduce((sum, d) => sum + getConnectedPortCount(d), 0)
 
   return (
     <div>
@@ -173,13 +202,13 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
         )}
       </div>
 
-      {/* View mode toggle */}
-      <div className="flex items-center gap-1 mb-6 bg-gray-900 border border-gray-800 rounded-lg p-1 w-fit">
+      {/* View mode toggle — horizontally scrollable on mobile */}
+      <div className="flex items-center gap-1 mb-6 bg-gray-900 border border-gray-800 rounded-lg p-1 overflow-x-auto max-w-full scrollbar-hide">
         {VIEW_MODES.map(mode => (
           <button
             key={mode.id}
             onClick={() => setViewMode(mode.id)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
               viewMode === mode.id
                 ? mode.id === 'normal'
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
@@ -210,6 +239,25 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
             <div className="text-2xl font-bold text-red-400">{deviations}</div>
             <div className="text-xs text-gray-500 mt-1">Abweichungen</div>
+          </div>
+        </div>
+      ) : viewMode === 'network' ? (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+            <div className="text-2xl font-bold text-blue-400">{networkDeviceCount}</div>
+            <div className="text-xs text-gray-500 mt-1">Geräte mit Ports</div>
+          </div>
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+            <div className="text-2xl font-bold text-white">{totalPorts}</div>
+            <div className="text-xs text-gray-500 mt-1">Ports gesamt</div>
+          </div>
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+            <div className="text-2xl font-bold text-emerald-400">{connectedPorts}</div>
+            <div className="text-xs text-gray-500 mt-1">Verbunden</div>
+          </div>
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+            <div className="text-2xl font-bold text-gray-500">{totalPorts - connectedPorts}</div>
+            <div className="text-xs text-gray-500 mt-1">Frei</div>
           </div>
         </div>
       ) : (
@@ -263,14 +311,18 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
           </div>
         </div>
       ) : (
-        <div className="flex gap-6 mt-4 text-xs text-gray-400">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-xs text-gray-400">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-blue-500/70 border border-blue-400"></div>
-            {viewMode === 'security' ? 'Sicherheitsinfo vorhanden' : 'Umweltinfo vorhanden'}
+            {viewMode === 'network'
+              ? 'Netzwerk-Ports vorhanden'
+              : viewMode === 'security'
+                ? 'Sicherheitsinfo vorhanden'
+                : 'Umweltinfo vorhanden'}
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-gray-700/50 border border-gray-600"></div>
-            Keine Info hinterlegt
+            {viewMode === 'network' ? 'Keine Ports' : 'Keine Info hinterlegt'}
           </div>
         </div>
       )}

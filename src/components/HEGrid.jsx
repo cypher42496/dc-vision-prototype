@@ -157,14 +157,14 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
         </div>
         {/* View mode toggle */}
         {onSwitchMode && (
-          <div className="flex gap-1 bg-black/40 rounded-lg p-0.5 w-fit">
+          <div className="flex gap-1 bg-black/40 rounded-lg p-0.5 overflow-x-auto max-w-full scrollbar-hide">
             {HE_VIEW_MODES.map(mode => (
               <button
                 key={mode.id}
                 onClick={() => {
                   if (mode.id !== 'manual') onSwitchMode()
                 }}
-                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                   mode.id === 'manual'
                     ? 'bg-cyan-500/30 text-cyan-400'
                     : 'text-gray-400 hover:text-gray-200'

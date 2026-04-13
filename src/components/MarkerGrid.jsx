@@ -88,6 +88,7 @@ const AR_VIEW_MODES = [
   { id: 'manual', label: 'Manuell' },
   { id: 'security', label: '🔒 Sicherheit' },
   { id: 'environment', label: '🌿 Umwelt' },
+  { id: 'network', label: '🔌 Netzwerk' },
 ]
 
 export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode }) {
@@ -325,10 +326,13 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
 
             let fill, stroke
 
-            if (currentMode === 'security' || currentMode === 'environment') {
-              // Audit modes: blue if device has info, gray otherwise
-              const infoField = currentMode === 'security' ? 'securityInfo' : 'environmentInfo'
-              const hasInfo = device && device[infoField]
+            if (currentMode === 'security' || currentMode === 'environment' || currentMode === 'network') {
+              // Audit/network modes: blue if device has relevant info, gray otherwise
+              let hasInfo = false
+              if (currentMode === 'security') hasInfo = !!(device && device.securityInfo)
+              else if (currentMode === 'environment') hasInfo = !!(device && device.environmentInfo)
+              else if (currentMode === 'network') hasInfo = !!(device && device.ports && device.ports.length > 0)
+
               if (hasInfo) {
                 fill = 'rgba(59,130,246,0.35)'; stroke = 'rgba(59,130,246,0.95)'
               } else if (device) {
@@ -501,13 +505,13 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
             Abbrechen
           </button>
         </div>
-        {/* View mode toggle */}
-        <div className="flex gap-1 bg-black/40 rounded-lg p-0.5 w-fit">
+        {/* View mode toggle — scrollable on mobile */}
+        <div className="flex gap-1 bg-black/40 rounded-lg p-0.5 overflow-x-auto max-w-full scrollbar-hide">
           {AR_VIEW_MODES.map(mode => (
             <button
               key={mode.id}
               onClick={() => handleSetArViewMode(mode.id)}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                 arViewMode === mode.id
                   ? mode.id === 'normal'
                     ? 'bg-cyan-500/30 text-cyan-400'
@@ -556,9 +560,11 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
         <div className="px-3 py-2 text-[11px] text-gray-400 uppercase tracking-wider">
           {arViewMode === 'normal'
             ? 'Erkennung (tippen zum Korrigieren)'
-            : arViewMode === 'security'
-              ? 'Sicherheitsrelevante Informationen'
-              : 'Umweltrelevante Informationen'}
+            : arViewMode === 'network'
+              ? 'Netzwerk-Ports & Verbindungen'
+              : arViewMode === 'security'
+                ? 'Sicherheitsrelevante Informationen'
+                : 'Umweltrelevante Informationen'}
         </div>
         <div className="px-3 pb-3 space-y-1">
           {Array.from({ length: totalUnits }, (_, i) => totalUnits - i).map(u => {
@@ -566,10 +572,23 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
             if (device && u !== device.position + device.height - 1) return null
 
             if (arViewMode !== 'normal') {
-              // Audit mode list: only show devices (skip empty HEs)
+              // Audit/network mode list: only show devices (skip empty HEs)
               if (!device) return null
-              const infoField = arViewMode === 'security' ? 'securityInfo' : 'environmentInfo'
-              const hasInfo = !!device[infoField]
+
+              let hasInfo, infoContent
+              if (arViewMode === 'network') {
+                const ports = device.ports ?? []
+                hasInfo = ports.length > 0
+                const connected = ports.filter(p => p.connectedTo).length
+                infoContent = hasInfo
+                  ? `${ports.length} Port${ports.length !== 1 ? 's' : ''}, ${connected} verbunden — ${ports.slice(0, 3).map(p => `${p.name} (${p.type})`).join(', ')}${ports.length > 3 ? ' …' : ''}`
+                  : null
+              } else {
+                const infoField = arViewMode === 'security' ? 'securityInfo' : 'environmentInfo'
+                hasInfo = !!device[infoField]
+                infoContent = hasInfo ? device[infoField] : null
+              }
+
               return (
                 <div
                   key={u}
@@ -579,10 +598,12 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
                   <span className={`w-2 h-2 rounded-full shrink-0 mt-1 ${hasInfo ? 'bg-blue-500' : 'bg-gray-600'}`} />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-gray-200 truncate">{device.name}</div>
-                    {hasInfo ? (
-                      <div className="text-[10px] text-blue-300 mt-0.5 line-clamp-2">{device[infoField]}</div>
+                    {infoContent ? (
+                      <div className="text-[10px] text-blue-300 mt-0.5 line-clamp-2">{infoContent}</div>
                     ) : (
-                      <div className="text-[10px] text-gray-600 mt-0.5 italic">Keine Info hinterlegt</div>
+                      <div className="text-[10px] text-gray-600 mt-0.5 italic">
+                        {arViewMode === 'network' ? 'Keine Ports' : 'Keine Info hinterlegt'}
+                      </div>
                     )}
                   </div>
                 </div>
