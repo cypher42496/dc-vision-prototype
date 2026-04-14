@@ -19,8 +19,8 @@ export default function DeviceEditor({ rack, device, initialPosition, onSave, on
     formFactor: device?.formFactor ?? '1U',
     height: device?.height ?? 1,
     position: device?.position ?? initialPosition ?? 1,
-    status: device?.status ?? 'aktiv',
-    plannedStatus: device?.plannedStatus ?? 'aktiv',
+    status: device?.status ?? 'produktiv',
+    plannedStatus: device?.plannedStatus ?? 'produktiv',
     securityInfo: device?.securityInfo ?? '',
     environmentInfo: device?.environmentInfo ?? '',
   }))
@@ -163,9 +163,10 @@ export default function DeviceEditor({ rack, device, initialPosition, onSave, on
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className={inputClass}
               >
-                <option value="aktiv">aktiv</option>
+                <option value="produktiv">produktiv</option>
                 <option value="geplant">geplant</option>
                 <option value="defekt">defekt</option>
+                <option value="verschollen">verschollen</option>
               </select>
             </Field>
             <Field label="Status (Soll)">
@@ -174,7 +175,7 @@ export default function DeviceEditor({ rack, device, initialPosition, onSave, on
                 onChange={(e) => setForm({ ...form, plannedStatus: e.target.value })}
                 className={inputClass}
               >
-                <option value="aktiv">aktiv</option>
+                <option value="produktiv">produktiv</option>
                 <option value="geplant">geplant</option>
               </select>
             </Field>

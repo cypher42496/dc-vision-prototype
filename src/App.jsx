@@ -26,7 +26,6 @@ import RackView from './components/RackView'
 import DeviceDetail from './components/DeviceDetail'
 import ComparisonView from './components/ComparisonView'
 import CablingView from './components/CablingView'
-import PlanningMode from './components/PlanningMode'
 import ARMarkerMode from './components/ARMarkerMode'
 import QRCodePrintPage from './components/QRCodePrintPage'
 import MarkerPrintPage from './components/MarkerPrintPage'
@@ -186,14 +185,7 @@ function App() {
             allDevices={data.racks.flatMap(r => r.devices)}
           />
         )
-      case 'planning':
-        return (
-          <PlanningMode
-            rack={data.racks.find(r => r.id === 'RACK-A03')}
-            onUpdateDevice={handleUpdateDevice}
-          />
-        )
-      case 'qrcodes':
+case 'qrcodes':
         return (
           <QRCodePrintPage racks={data.racks} onBack={() => setCurrentView('rack')} />
         )

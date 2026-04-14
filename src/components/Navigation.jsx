@@ -9,8 +9,7 @@ export default function Navigation({ currentView, onViewChange, racks, selectedR
     { id: 'rack', label: 'Rack-Übersicht', icon: '▦' },
     { id: 'comparison', label: 'Soll/Ist-Vergleich', icon: '⇄' },
     { id: 'cabling', label: 'Verkabelung', icon: '⚡' },
-    { id: 'planning', label: 'Planungsmodus', icon: '📋' },
-    { id: 'qrcodes', label: 'QR-Codes', icon: '⊞' },
+{ id: 'qrcodes', label: 'QR-Codes', icon: '⊞' },
     { id: 'markerprint', label: 'AR-Marker', icon: '◧' },
   ]
 

@@ -35,8 +35,8 @@ export default function DeviceDetail({ device, cables, allDevices, onBack, onUpd
 
   const handleConfirmStatus = () => {
     onUpdateDevice(device.id, {
-      status: 'aktiv',
-      plannedStatus: 'aktiv',
+      status: 'produktiv',
+      plannedStatus: 'produktiv',
       plannedModel: undefined
     })
   }

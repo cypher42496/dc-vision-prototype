@@ -46,6 +46,12 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     if (device.status === 'geplant') {
       return 'bg-yellow-500/60 border-yellow-400 hover:bg-yellow-500/80'
     }
+    if (device.status === 'defekt') {
+      return 'bg-orange-500/70 border-orange-400 hover:bg-orange-500'
+    }
+    if (device.status === 'verschollen') {
+      return 'bg-purple-500/70 border-purple-400 hover:bg-purple-500'
+    }
     return 'bg-emerald-500/70 border-emerald-400 hover:bg-emerald-500'
   }
 
@@ -64,7 +70,9 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     }
     if (device.status !== device.plannedStatus || device.plannedModel) return 'Abweichung'
     if (device.status === 'geplant') return 'Geplant'
-    return 'Aktiv'
+    if (device.status === 'defekt') return 'Defekt'
+    if (device.status === 'verschollen') return 'Verschollen'
+    return 'Produktiv'
   }
 
   // Sub-line shown in audit/network modes
@@ -173,7 +181,7 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
   }
 
   // Count stats
-  const activeDevices = rack.devices.filter(d => d.status === 'aktiv').length
+  const activeDevices = rack.devices.filter(d => d.status === 'produktiv').length
   const plannedDevices = rack.devices.filter(d => d.status === 'geplant').length
   const deviations = rack.devices.filter(d => d.status !== d.plannedStatus || d.plannedModel).length
   const usedUnits = rack.devices.reduce((sum, d) => sum + d.height, 0)
@@ -230,7 +238,7 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
             <div className="text-2xl font-bold text-emerald-400">{activeDevices}</div>
-            <div className="text-xs text-gray-500 mt-1">Aktive Geräte</div>
+            <div className="text-xs text-gray-500 mt-1">Produktive Geräte</div>
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
             <div className="text-2xl font-bold text-yellow-400">{plannedDevices}</div>
@@ -292,14 +300,22 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
 
       {/* Legend — changes by mode */}
       {viewMode === 'normal' ? (
-        <div className="flex gap-6 mt-4 text-xs text-gray-400">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-xs text-gray-400">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-emerald-500/70 border border-emerald-400"></div>
-            Aktiv
+            Produktiv
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-yellow-500/60 border border-yellow-400"></div>
             Geplant
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-orange-500/70 border border-orange-400"></div>
+            Defekt
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-purple-500/70 border border-purple-400"></div>
+            Verschollen
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-red-500/80 border border-red-400"></div>

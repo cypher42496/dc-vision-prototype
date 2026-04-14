@@ -15,8 +15,8 @@ export const mockData = {
           formFactor: '1U',
           position: 42,
           height: 1,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           securityInfo: 'BSI-Grundschutz-konform (Baustein NET.3.2). Zugriffskontrolle: RBAC + TACACS+. Firmware-Stand geprüft Q1/2026.',
           environmentInfo: 'Max. Leistungsaufnahme: 450 W. Betriebstemperatur: 0–45 °C. RoHS-konform. WEEE-Reg.-Nr. DE 12345678.',
           ports: [
@@ -34,8 +34,8 @@ export const mockData = {
           formFactor: '1U',
           position: 41,
           height: 1,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-020', name: 'PP-01/1', type: 'RJ45', connectedTo: 'PORT-001', cableId: 'K-2024-0001', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-021', name: 'PP-01/2', type: 'RJ45', connectedTo: 'PORT-002', cableId: 'K-2024-0002', status: 'verbunden', plannedStatus: 'verbunden' },
@@ -53,8 +53,8 @@ export const mockData = {
           formFactor: '2U',
           position: 39,
           height: 2,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           securityInfo: 'TPM 2.0 aktiv. Secure Boot aktiviert. Verschlüsselung: BitLocker AES-256. Letzter Penetrationstest: 03/2026.',
           environmentInfo: 'Max. Leistungsaufnahme: 750 W (2x PSU redundant). Betriebstemperatur: 10–35 °C. Energy Star 3.0 zertifiziert.',
           ports: [
@@ -71,8 +71,8 @@ export const mockData = {
           formFactor: '2U',
           position: 37,
           height: 2,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-040', name: 'eth0', type: 'RJ45', connectedTo: 'PORT-004', cableId: 'K-2024-0004', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-041', name: 'eth1', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
@@ -87,8 +87,8 @@ export const mockData = {
           formFactor: '2U',
           position: 35,
           height: 2,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           securityInfo: 'Datenbank-Verschlüsselung: TDE (AES-256). Zugriff nur über Jump-Host. Audit-Logging aktiviert (Syslog).',
           ports: [
             { id: 'PORT-050', name: 'eth0', type: 'RJ45', connectedTo: 'PORT-022', cableId: 'K-2024-0005', status: 'verbunden', plannedStatus: 'verbunden' },
@@ -104,8 +104,8 @@ export const mockData = {
           formFactor: '2U',
           position: 33,
           height: 2,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-060', name: 'eth0', type: 'RJ45', connectedTo: 'PORT-024', cableId: 'K-2024-0007', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-061', name: 'eth1', type: 'RJ45', connectedTo: 'PORT-025', cableId: 'K-2024-0008', status: 'verbunden', plannedStatus: 'verbunden' },
@@ -119,8 +119,8 @@ export const mockData = {
           formFactor: '2U',
           position: 31,
           height: 2,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-070', name: 'eth0', type: 'RJ45', connectedTo: 'PORT-082', cableId: 'K-2024-0009', status: 'verbunden', plannedStatus: 'verbunden' },
           ]
@@ -133,8 +133,8 @@ export const mockData = {
           formFactor: '1U',
           position: 29,
           height: 1,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-080', name: 'FC0/1', type: 'SFP+', connectedTo: 'PORT-090', cableId: 'K-2024-0010', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-081', name: 'FC0/2', type: 'SFP+', connectedTo: 'PORT-091', cableId: 'K-2024-0011', status: 'verbunden', plannedStatus: 'verbunden' },
@@ -149,8 +149,8 @@ export const mockData = {
           formFactor: '4U',
           position: 25,
           height: 4,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           securityInfo: 'Verschlüsselung: NSE (NetApp Storage Encryption) + NVE. FIPS 140-2 Level 2 validiert.',
           environmentInfo: 'Max. Leistungsaufnahme: 1.800 W. Schallpegel: 72 dB(A). Kühlluftbedarf: 850 m³/h. RoHS/REACH-konform.',
           ports: [
@@ -167,8 +167,8 @@ export const mockData = {
           formFactor: '3U',
           position: 3,
           height: 3,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           environmentInfo: 'Max. Leistungsaufnahme: 5.000 VA / 4.500 W. Batterie: Blei-Säure (VRLA). Entsorgung gemäß BattG. Wirkungsgrad: 97 %.',
           ports: []
         },
@@ -180,8 +180,8 @@ export const mockData = {
           formFactor: '0U',
           position: 0,
           height: 0,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-110', name: 'Mgmt', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'verbunden' },
           ]
@@ -204,8 +204,8 @@ export const mockData = {
           formFactor: '1U',
           position: 42,
           height: 1,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-200', name: 'Gi1/0/1', type: 'RJ45', connectedTo: 'PORT-210', cableId: 'K-2024-0012', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-201', name: 'Gi1/0/2', type: 'RJ45', connectedTo: 'PORT-220', cableId: 'K-2024-0013', status: 'verbunden', plannedStatus: 'verbunden' },
@@ -223,8 +223,8 @@ export const mockData = {
           formFactor: '1U',
           position: 41,
           height: 1,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-210', name: 'PP-02/1', type: 'RJ45', connectedTo: 'PORT-200', cableId: 'K-2024-0012', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-211', name: 'PP-02/2', type: 'RJ45', connectedTo: 'PORT-250', cableId: 'K-2024-0016', status: 'verbunden', plannedStatus: 'verbunden' },
@@ -240,8 +240,8 @@ export const mockData = {
           formFactor: '1U',
           position: 40,
           height: 1,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-220', name: 'eth0', type: 'RJ45', connectedTo: 'PORT-201', cableId: 'K-2024-0013', status: 'verbunden', plannedStatus: 'verbunden' },
             // ABWEICHUNG: Falscher Port – sollte an PORT-212 angeschlossen sein
@@ -256,8 +256,8 @@ export const mockData = {
           formFactor: '2U',
           position: 38,
           height: 2,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-230', name: 'eth0', type: 'RJ45', connectedTo: 'PORT-202', cableId: 'K-2024-0014', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-231', name: 'eth1', type: 'RJ45', connectedTo: 'PORT-211', cableId: 'K-2024-0020', status: 'verbunden', plannedStatus: 'verbunden' },
@@ -272,7 +272,7 @@ export const mockData = {
           formFactor: '1U',
           position: 36,
           height: 1,
-          status: 'aktiv',
+          status: 'produktiv',
           plannedStatus: 'nicht vorhanden',
           ports: [
             { id: 'PORT-240', name: 'eth0', type: 'RJ45', connectedTo: 'PORT-203', cableId: 'K-2024-0015', status: 'verbunden', plannedStatus: 'nicht verbunden' },
@@ -286,8 +286,8 @@ export const mockData = {
           formFactor: '1U',
           position: 35,
           height: 1,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-250', name: 'eth0', type: 'RJ45', connectedTo: 'PORT-211', cableId: 'K-2024-0016', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-251', name: 'eth1', type: 'RJ45', connectedTo: 'PORT-212', cableId: 'K-2024-0017', status: 'verbunden', plannedStatus: 'verbunden' },
@@ -302,8 +302,8 @@ export const mockData = {
           position: 34,
           height: 1,
           // ABWEICHUNG: Falsches Modell – geplant war FortiGate 400F
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           plannedModel: 'FortiGate 400F',
           securityInfo: 'IPS/IDS aktiviert. SSL-Inspection: Deep Packet Inspection. VPN: IPsec + SSL. FortiGuard-Lizenzen gültig bis 12/2026.',
           environmentInfo: 'Max. Leistungsaufnahme: 200 W. Betriebstemperatur: 0–40 °C. RoHS-konform.',
@@ -320,8 +320,8 @@ export const mockData = {
           formFactor: '2U',
           position: 2,
           height: 2,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
           ports: []
         },
       ]
@@ -470,8 +470,10 @@ export const mockData = {
           formFactor: '1U',
           position: 1,
           height: 1,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
+          securityInfo: 'Überspannungsschutz integriert. Keine Netzwerkanbindung – kein IT-Sicherheitsrisiko. Physischer Zugang nur autorisiertes Personal.',
+          environmentInfo: 'Max. Leistungsaufnahme: 3.500 W (16 A). RoHS-konform. Kein Lüfter, passive Kühlung. Entsorgung über ElektroG.',
           ports: []
         },
         {
@@ -482,8 +484,10 @@ export const mockData = {
           formFactor: '1U',
           position: 2,
           height: 1,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
+          securityInfo: 'Passives Bauteil – keine Firmware, kein Angriffsvektor. Beschriftung aller Ports gemäß Netzwerkplan. Zugang physisch gesichert.',
+          environmentInfo: 'Kein Stromverbrauch (passiv). RoHS-konform. Material: Stahlblech pulverbeschichtet. WEEE-Entsorgung über Hersteller.',
           ports: []
         },
         {
@@ -494,8 +498,10 @@ export const mockData = {
           formFactor: '1U',
           position: 3,
           height: 1,
-          status: 'aktiv',
-          plannedStatus: 'aktiv',
+          status: 'defekt',
+          plannedStatus: 'produktiv',
+          securityInfo: 'Firewall-Regelwerk: Whitelist-basiert. IDS/IPS aktiviert. Letztes Firmware-Update: 01/2026. BSI-Grundschutz NET.3.2 konform.',
+          environmentInfo: 'Max. Leistungsaufnahme: 150 W. Betriebstemperatur: 0–40 °C. Lüfter: 2x redundant. RoHS-konform.',
           ports: []
         },
         // ABWEICHUNG: Switch ist auf HE 5 geplant, steht physisch aber auf HE 4
@@ -509,8 +515,10 @@ export const mockData = {
           formFactor: '1U',
           position: 5,
           height: 1,
-          status: 'geplant',
-          plannedStatus: 'aktiv',
+          status: 'verschollen',
+          plannedStatus: 'produktiv',
+          securityInfo: 'VLAN-Segmentierung konfiguriert. 802.1X Port-Authentifizierung aktiviert. SNMP v3 für Monitoring.',
+          environmentInfo: 'Max. Leistungsaufnahme: 45 W (PoE-Budget: 370 W). Lüfterlos. Betriebstemperatur: 0–50 °C. RoHS/REACH-konform.',
           ports: []
         },
       ]
