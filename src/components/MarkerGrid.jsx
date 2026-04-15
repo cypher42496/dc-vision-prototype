@@ -88,6 +88,47 @@ function classifyOccupancy(sample) {
   return 'unsicher'
 }
 
+// Median of a number array. Used to derive scene-relative thresholds so that
+// the classifier adapts to lighting conditions (dim LTE shot vs. bright shop
+// light would otherwise yield wildly different absolute luma values).
+function median(values) {
+  if (values.length === 0) return 0
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid]
+}
+
+// Scene-adaptive margins: a HE counts as "clearly brighter / darker / more
+// textured / flatter than the rest of the rack" if its metrics differ from
+// the scene median by at least these amounts. Tuned empirically on the
+// RACK-TEST physical setup (mixed devices + blind panels under LTE lighting).
+const ADAPTIVE_BRIGHT_MARGIN = 12   // luma points above/below scene median
+const ADAPTIVE_TEXTURE_MARGIN = 5   // stddev points above/below scene median
+
+// Adaptive classifier. Returns 'belegt' / 'leer' / 'unsicher' based on how
+// the sample compares to the rest of the rack in this frame. If the adaptive
+// signal is inconclusive (scene too homogeneous, or sample near the median),
+// we fall back to the absolute-threshold classifier.
+function classifyAdaptive(sample, sceneMedianMean, sceneMedianStd) {
+  const brightDelta = sample.mean - sceneMedianMean
+  const textureDelta = sample.stddev - sceneMedianStd
+
+  // Clearly above median on both axes → device front
+  if (brightDelta >= ADAPTIVE_BRIGHT_MARGIN && textureDelta >= ADAPTIVE_TEXTURE_MARGIN) {
+    return 'belegt'
+  }
+  // Clearly below median on both axes → empty rack interior
+  if (brightDelta <= -ADAPTIVE_BRIGHT_MARGIN && textureDelta <= -ADAPTIVE_TEXTURE_MARGIN) {
+    return 'leer'
+  }
+  // Inconclusive → consult the absolute-threshold classifier as a sanity
+  // check. This catches "the whole scene is clearly dark" (median is low,
+  // no HE stands out, but absolute brightness still says 'leer').
+  return classifyOccupancy(sample)
+}
+
 const AR_VIEW_MODES = [
   { id: 'normal', label: 'Abgleich' },
   { id: 'manual', label: 'Manuell' },
@@ -270,9 +311,12 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
 
           const heHalfWidth = (avgMarkerWidth * RACK_WIDTH_IN_MARKER_WIDTHS) / 2
 
-          // Sample each HE region on the image (not the overlay)
+          // Sample each HE region on the image (not the overlay).
+          // Two-pass: first pass samples + smooths, second pass classifies
+          // using scene-relative statistics so results adapt to lighting.
           const newIst = {}
           const quads = [] // for drawing
+          const smoothedSamples = {} // u → { mean, stddev }
 
           for (let u = 1; u <= totalUnits; u++) {
             // HE u spans t=[u-1, u] / totalUnits between bottom→top marker
@@ -308,12 +352,12 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
 
             let sumMean = 0, sumStd = 0
             for (const s of history) { sumMean += s.mean; sumStd += s.stddev }
-            const smoothedSample = {
+            smoothedSamples[u] = {
               mean: sumMean / history.length,
               stddev: sumStd / history.length,
             }
-
-            newIst[u] = classifyOccupancy(smoothedSample)
+            // Classification is deferred to the second pass below, once we
+            // have scene-wide statistics to compare against.
 
             // Build the 4 corners of the HE quad on the overlay
             const tl = {
@@ -333,6 +377,29 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
               y: (cyBot + perpY * heHalfWidth) * scaleY,
             }
             quads.push({ u, tl, tr, br, bl })
+          }
+
+          // Second pass: compute scene-relative statistics, then classify
+          // each HE against them. This makes the classifier resilient to
+          // global lighting changes (bright daylight vs. dim LTE capture)
+          // and to "device bleed" into neighboring empty HEs — an empty HE
+          // next to a bright switch will still be relatively darker than
+          // the actual device rows, so it gets classified as 'leer'.
+          const allMeans = []
+          const allStds = []
+          for (let u = 1; u <= totalUnits; u++) {
+            allMeans.push(smoothedSamples[u].mean)
+            allStds.push(smoothedSamples[u].stddev)
+          }
+          const sceneMedianMean = median(allMeans)
+          const sceneMedianStd = median(allStds)
+
+          for (let u = 1; u <= totalUnits; u++) {
+            newIst[u] = classifyAdaptive(
+              smoothedSamples[u],
+              sceneMedianMean,
+              sceneMedianStd
+            )
           }
 
           setIstMap(prev => {
