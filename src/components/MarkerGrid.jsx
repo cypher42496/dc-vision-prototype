@@ -25,6 +25,11 @@ const BELEGT_STDDEV_MIN = 22       // stddev must be at least this (real device 
 const LEER_BRIGHTNESS_MAX = 55     // mean luma below this → strong "leer" signal
 const LEER_STDDEV_MAX = 18         // and stddev below this → strong "leer" signal
 
+// Temporal smoothing: keep the last N per-HE samples and classify on the
+// averaged (mean, stddev). Eliminates frame-to-frame flicker caused by
+// sensor noise, rolling-shutter artifacts and brief focus changes.
+const SAMPLE_HISTORY_SIZE = 8
+
 function centerOfCorners(corners) {
   const x = (corners[0].x + corners[1].x + corners[2].x + corners[3].x) / 4
   const y = (corners[0].y + corners[1].y + corners[2].y + corners[3].y) / 4
@@ -104,6 +109,8 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
   const [markersSeen, setMarkersSeen] = useState({ top: false, bottom: false })
   const [istMap, setIstMap] = useState({})
   const userOverridesRef = useRef({})
+  // Per-HE ring buffer of raw samples { mean, stddev } for temporal smoothing
+  const sampleHistoryRef = useRef({})
   const [, forceRerender] = useState(0)
   const [arViewMode, setArViewMode] = useState('normal')
   const arViewModeRef = useRef('normal')
@@ -235,6 +242,13 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
         // Clear overlay each frame
         ctxOverlay.clearRect(0, 0, overlay.width, overlay.height)
 
+        // If markers are (temporarily) lost, drop the sample history so that
+        // when detection resumes we don't classify based on stale samples
+        // captured while the camera was pointing somewhere else.
+        if (!topMarker || !bottomMarker) {
+          sampleHistoryRef.current = {}
+        }
+
         if (topMarker && bottomMarker) {
           const topC = centerOfCorners(topMarker.corners)
           const botC = centerOfCorners(bottomMarker.corners)
@@ -276,11 +290,30 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
 
             // HE cell height (vertical span of one HE along the rack axis)
             const heLenOnImage = len / totalUnits
-            const halfH = heLenOnImage * 0.45
-            const halfW = heHalfWidth * 0.8 // sample a bit inside to avoid frame
+            // ROI shrinkage: sample only the inner ~60 % of each HE so that
+            // screws, rack-frame edges and neighboring-HE shadows don't
+            // contaminate the reading. Empirically this is the single most
+            // impactful fix for "unsicher" false positives on 1U devices.
+            const halfH = heLenOnImage * 0.32
+            const halfW = heHalfWidth * 0.60
 
-            const sample = sampleRegion(imageData, cx, cy, halfW, halfH)
-            newIst[u] = classifyOccupancy(sample)
+            const rawSample = sampleRegion(imageData, cx, cy, halfW, halfH)
+
+            // Temporal smoothing: push into per-HE ring buffer, classify on
+            // the average of the last N samples instead of the current frame.
+            const history = sampleHistoryRef.current[u] ?? []
+            history.push(rawSample)
+            if (history.length > SAMPLE_HISTORY_SIZE) history.shift()
+            sampleHistoryRef.current[u] = history
+
+            let sumMean = 0, sumStd = 0
+            for (const s of history) { sumMean += s.mean; sumStd += s.stddev }
+            const smoothedSample = {
+              mean: sumMean / history.length,
+              stddev: sumStd / history.length,
+            }
+
+            newIst[u] = classifyOccupancy(smoothedSample)
 
             // Build the 4 corners of the HE quad on the overlay
             const tl = {

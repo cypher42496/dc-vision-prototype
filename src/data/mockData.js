@@ -518,6 +518,62 @@ export const mockData = {
           environmentInfo: 'Max. Leistungsaufnahme: 45 W (PoE-Budget: 370 W). Lüfterlos. Betriebstemperatur: 0–50 °C. RoHS/REACH-konform.',
           ports: []
         },
+        {
+          id: 'TEST-DEV-005',
+          name: 'Blindpanel HE 4',
+          manufacturer: 'Generisch',
+          model: 'Blindpanel 1U schwarz',
+          formFactor: '1U',
+          position: 4,
+          height: 1,
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
+          securityInfo: 'Passives Bauteil – kein IT-Sicherheitsrisiko. Verhindert physischen Zugriff auf Rack-Innenraum.',
+          environmentInfo: 'Luftstrom-Management: verhindert Warmluft-Rückzirkulation zwischen Kalt- und Warmgang. Material: Stahlblech, RoHS-konform. Kein Stromverbrauch.',
+          ports: []
+        },
+        {
+          id: 'TEST-DEV-006',
+          name: 'Blindpanel HE 3',
+          manufacturer: 'Generisch',
+          model: 'Blindpanel 1U schwarz',
+          formFactor: '1U',
+          position: 3,
+          height: 1,
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
+          securityInfo: 'Passives Bauteil – kein IT-Sicherheitsrisiko. Verhindert physischen Zugriff auf Rack-Innenraum.',
+          environmentInfo: 'Luftstrom-Management: verhindert Warmluft-Rückzirkulation zwischen Kalt- und Warmgang. Material: Stahlblech, RoHS-konform. Kein Stromverbrauch.',
+          ports: []
+        },
+        {
+          id: 'TEST-DEV-007',
+          name: 'Blindpanel HE 2',
+          manufacturer: 'Generisch',
+          model: 'Blindpanel 1U schwarz',
+          formFactor: '1U',
+          position: 2,
+          height: 1,
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
+          securityInfo: 'Passives Bauteil – kein IT-Sicherheitsrisiko. Verhindert physischen Zugriff auf Rack-Innenraum.',
+          environmentInfo: 'Luftstrom-Management: verhindert Warmluft-Rückzirkulation zwischen Kalt- und Warmgang. Material: Stahlblech, RoHS-konform. Kein Stromverbrauch.',
+          ports: []
+        },
+        {
+          id: 'TEST-DEV-008',
+          name: 'Blindpanel HE 1',
+          manufacturer: 'Generisch',
+          model: 'Blindpanel 1U schwarz',
+          formFactor: '1U',
+          position: 1,
+          height: 1,
+          status: 'produktiv',
+          plannedStatus: 'produktiv',
+          securityInfo: 'Passives Bauteil – kein IT-Sicherheitsrisiko. Verhindert physischen Zugriff auf Rack-Innenraum.',
+          environmentInfo: 'Luftstrom-Management: verhindert Warmluft-Rückzirkulation zwischen Kalt- und Warmgang. Material: Stahlblech, RoHS-konform. Kein Stromverbrauch.',
+          ports: []
+        },
       ]
     }
   ],
