@@ -488,7 +488,12 @@ export const mockData = {
           plannedStatus: 'produktiv',
           securityInfo: 'Passives Bauteil – keine Firmware, kein Angriffsvektor. Beschriftung aller Ports gemäß Netzwerkplan. Zugang physisch gesichert.',
           environmentInfo: 'Kein Stromverbrauch (passiv). RoHS-konform. Material: Stahlblech pulverbeschichtet. WEEE-Entsorgung über Hersteller.',
-          ports: []
+          ports: [
+            { id: 'PORT-T020', name: 'PP/1', type: 'RJ45', connectedTo: 'PORT-T032', cableId: 'K-TEST-002', status: 'verbunden', plannedStatus: 'verbunden' },
+            { id: 'PORT-T021', name: 'PP/2', type: 'RJ45', connectedTo: 'PORT-T041', cableId: 'K-TEST-003', status: 'verbunden', plannedStatus: 'verbunden' },
+            { id: 'PORT-T022', name: 'PP/3', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+            { id: 'PORT-T023', name: 'PP/4', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+          ]
         },
         {
           id: 'TEST-DEV-003',
@@ -502,7 +507,12 @@ export const mockData = {
           plannedStatus: 'produktiv',
           securityInfo: 'Firewall-Regelwerk: Whitelist-basiert. IDS/IPS aktiviert. Letztes Firmware-Update: 01/2026. BSI-Grundschutz NET.3.2 konform.',
           environmentInfo: 'Max. Leistungsaufnahme: 150 W. Betriebstemperatur: 0–40 °C. Lüfter: 2x redundant. RoHS-konform.',
-          ports: []
+          ports: [
+            { id: 'PORT-T030', name: 'WAN', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+            { id: 'PORT-T031', name: 'LAN1', type: 'RJ45', connectedTo: 'PORT-T040', cableId: 'K-TEST-001', status: 'verbunden', plannedStatus: 'verbunden' },
+            { id: 'PORT-T032', name: 'LAN2', type: 'RJ45', connectedTo: 'PORT-T020', cableId: 'K-TEST-002', status: 'verbunden', plannedStatus: 'verbunden' },
+            { id: 'PORT-T033', name: 'MGMT', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+          ]
         },
         {
           id: 'TEST-DEV-004',
@@ -516,7 +526,20 @@ export const mockData = {
           plannedStatus: 'produktiv',
           securityInfo: 'VLAN-Segmentierung konfiguriert. 802.1X Port-Authentifizierung aktiviert. SNMP v3 für Monitoring.',
           environmentInfo: 'Max. Leistungsaufnahme: 45 W (PoE-Budget: 370 W). Lüfterlos. Betriebstemperatur: 0–50 °C. RoHS/REACH-konform.',
-          ports: []
+          ports: [
+            { id: 'PORT-T040', name: 'Gi0/1', type: 'RJ45', connectedTo: 'PORT-T031', cableId: 'K-TEST-001', status: 'verbunden', plannedStatus: 'verbunden' },
+            { id: 'PORT-T041', name: 'Gi0/2', type: 'RJ45', connectedTo: 'PORT-T021', cableId: 'K-TEST-003', status: 'verbunden', plannedStatus: 'verbunden' },
+            { id: 'PORT-T042', name: 'Gi0/3', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+            { id: 'PORT-T043', name: 'Gi0/4', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+            { id: 'PORT-T044', name: 'Gi0/5', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+            { id: 'PORT-T045', name: 'Gi0/6', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+            { id: 'PORT-T046', name: 'Gi0/7', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+            { id: 'PORT-T047', name: 'Gi0/8', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+            { id: 'PORT-T048', name: 'Gi0/9', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+            { id: 'PORT-T049', name: 'Gi0/10', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+            { id: 'PORT-T04A', name: 'Gi0/11', type: 'SFP', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+            { id: 'PORT-T04B', name: 'Gi0/12', type: 'SFP', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'nicht verbunden' },
+          ]
         },
         {
           id: 'TEST-DEV-005',
@@ -606,5 +629,10 @@ export const mockData = {
     { id: 'K-2024-0018', label: 'K-2024-0018-2m', length: '2m', sourcePort: 'PORT-213', targetPort: 'PORT-260', type: 'Cat6a' },
     { id: 'K-2024-0019', label: 'K-2024-0019-1m', length: '1m', sourcePort: 'PORT-221', targetPort: 'PORT-213', type: 'Cat6a' },
     { id: 'K-2024-0020', label: 'K-2024-0020-3m', length: '3m', sourcePort: 'PORT-231', targetPort: 'PORT-211', type: 'Cat6a' },
+
+    // RACK-TEST Kabel – drei dedizierte Verbindungen zwischen Paketfilter, Switch, Patchpanel
+    { id: 'K-TEST-001', label: 'K-TEST-001-0.5m', length: '0.5m', sourcePort: 'PORT-T031', targetPort: 'PORT-T040', type: 'Cat6a' },
+    { id: 'K-TEST-002', label: 'K-TEST-002-0.5m', length: '0.5m', sourcePort: 'PORT-T032', targetPort: 'PORT-T020', type: 'Cat6a' },
+    { id: 'K-TEST-003', label: 'K-TEST-003-0.5m', length: '0.5m', sourcePort: 'PORT-T041', targetPort: 'PORT-T021', type: 'Cat6a' },
   ]
 }
