@@ -43,45 +43,87 @@ function markerWidth(corners) {
   return (top + bot) / 2
 }
 
-// Sample average brightness + stddev of a rectangle defined by two points
-// (topLeft, bottomRight in image coordinates) on the given ImageData.
+// Gradient magnitude threshold for a pixel to count as an "edge" pixel.
+// Chosen so that typical sensor noise does not trigger edges but real
+// device contours (screws, port frames, label text) do.
+const EDGE_GRADIENT_THRESHOLD = 28
+
+// Sample average brightness, stddev, and edge density of a rectangle.
+// Edge density = fraction of sampled pixels whose absolute luma gradient
+// (simple horizontal+vertical finite differences, Sobel-light) exceeds
+// EDGE_GRADIENT_THRESHOLD. Device fronts have many such edges (ports,
+// screws, labels, LEDs); empty HEs and flat surfaces have very few.
 function sampleRegion(imageData, cx, cy, halfW, halfH) {
   const { data, width, height } = imageData
-  const x0 = Math.max(0, Math.floor(cx - halfW))
-  const x1 = Math.min(width - 1, Math.ceil(cx + halfW))
-  const y0 = Math.max(0, Math.floor(cy - halfH))
-  const y1 = Math.min(height - 1, Math.ceil(cy + halfH))
-  if (x1 <= x0 || y1 <= y0) return { mean: 0, stddev: 0 }
+  const x0 = Math.max(1, Math.floor(cx - halfW))
+  const x1 = Math.min(width - 2, Math.ceil(cx + halfW))
+  const y0 = Math.max(1, Math.floor(cy - halfH))
+  const y1 = Math.min(height - 2, Math.ceil(cy + halfH))
+  if (x1 <= x0 || y1 <= y0) return { mean: 0, stddev: 0, edgeDensity: 0 }
 
   let sum = 0
   let sumSq = 0
   let count = 0
+  let edgeCount = 0
   // Subsample by stepping to keep this cheap (~300-500 pixels per region)
   const stepX = Math.max(1, Math.floor((x1 - x0) / 20))
   const stepY = Math.max(1, Math.floor((y1 - y0) / 8))
+
+  // Helper: luma at a pixel (no bounds check — caller enforces x0 ≥ 1 etc.)
+  const luma = (x, y) => {
+    const idx = (y * width + x) * 4
+    return data[idx] * 0.299 + data[idx + 1] * 0.587 + data[idx + 2] * 0.114
+  }
+
   for (let y = y0; y <= y1; y += stepY) {
     for (let x = x0; x <= x1; x += stepX) {
-      const idx = (y * width + x) * 4
-      // luma approximation
-      const lum = data[idx] * 0.299 + data[idx + 1] * 0.587 + data[idx + 2] * 0.114
+      const lum = luma(x, y)
       sum += lum
       sumSq += lum * lum
       count++
+
+      // Edge detection: absolute horizontal + vertical luma gradient.
+      // Using simple finite differences (neighbour pixels one step away)
+      // is ~3× cheaper than a full Sobel kernel and plenty accurate here.
+      const gx = Math.abs(luma(x + 1, y) - luma(x - 1, y))
+      const gy = Math.abs(luma(x, y + 1) - luma(x, y - 1))
+      if (gx + gy >= EDGE_GRADIENT_THRESHOLD) edgeCount++
     }
   }
-  if (count === 0) return { mean: 0, stddev: 0 }
+  if (count === 0) return { mean: 0, stddev: 0, edgeDensity: 0 }
   const mean = sum / count
   const variance = sumSq / count - mean * mean
-  return { mean, stddev: Math.sqrt(Math.max(0, variance)) }
+  return {
+    mean,
+    stddev: Math.sqrt(Math.max(0, variance)),
+    edgeDensity: edgeCount / count,
+  }
 }
 
+// Absolute edge-density thresholds. Derived from measurements on the
+// RACK-TEST setup: devices (patchpanel, switch, steckdose) typically
+// produce edge densities of 0.10–0.25; blind panels 0.03–0.07; empty
+// rack interior < 0.02.
+const BELEGT_EDGE_MIN = 0.08    // need this many edges to call it belegt
+const LEER_EDGE_MAX = 0.03      // fewer edges than this → definitely leer
+
 function classifyOccupancy(sample) {
-  // High-confidence belegt: clearly bright AND clearly textured (device front)
-  if (sample.mean >= BELEGT_BRIGHTNESS_MIN && sample.stddev >= BELEGT_STDDEV_MIN) {
-    return 'belegt'
-  }
-  // High-confidence leer: clearly dark AND clearly flat (rack interior)
-  if (sample.mean <= LEER_BRIGHTNESS_MAX && sample.stddev <= LEER_STDDEV_MAX) {
+  // High-confidence belegt: bright + textured + edge-rich (device front).
+  // Edge density is the strongest single feature — a patchpanel with
+  // dim lighting may fail the brightness check but will always pass
+  // edge count, so we accept belegt if 2 of 3 conditions are met.
+  const brightOk = sample.mean >= BELEGT_BRIGHTNESS_MIN
+  const textureOk = sample.stddev >= BELEGT_STDDEV_MIN
+  const edgeOk = sample.edgeDensity >= BELEGT_EDGE_MIN
+  const belegtVotes = (brightOk ? 1 : 0) + (textureOk ? 1 : 0) + (edgeOk ? 1 : 0)
+  if (belegtVotes >= 2) return 'belegt'
+
+  // High-confidence leer: dark AND flat AND no edges (rack interior).
+  if (
+    sample.mean <= LEER_BRIGHTNESS_MAX &&
+    sample.stddev <= LEER_STDDEV_MAX &&
+    sample.edgeDensity <= LEER_EDGE_MAX
+  ) {
     return 'leer'
   }
   // Otherwise we don't trust the heuristic — flag for manual confirmation
@@ -104,29 +146,58 @@ function median(values) {
 // textured / flatter than the rest of the rack" if its metrics differ from
 // the scene median by at least these amounts. Tuned empirically on the
 // RACK-TEST physical setup (mixed devices + blind panels under LTE lighting).
-const ADAPTIVE_BRIGHT_MARGIN = 12   // luma points above/below scene median
-const ADAPTIVE_TEXTURE_MARGIN = 5   // stddev points above/below scene median
+const ADAPTIVE_BRIGHT_MARGIN = 12     // luma points above/below scene median
+const ADAPTIVE_TEXTURE_MARGIN = 5     // stddev points above/below scene median
+const ADAPTIVE_EDGE_MARGIN = 0.03     // edge density above/below scene median
 
 // Adaptive classifier. Returns 'belegt' / 'leer' / 'unsicher' based on how
-// the sample compares to the rest of the rack in this frame. If the adaptive
-// signal is inconclusive (scene too homogeneous, or sample near the median),
-// we fall back to the absolute-threshold classifier.
-function classifyAdaptive(sample, sceneMedianMean, sceneMedianStd) {
+// the sample compares to the rest of the rack in this frame. Uses three
+// features (brightness, texture, edge density) and requires at least two
+// of them to point in the same direction — this way a patchpanel with
+// "normal" brightness but extreme edge count still gets classified as
+// belegt, and a blind panel with "normal" darkness but a few screw edges
+// doesn't get misclassified as leer.
+function classifyAdaptive(sample, sceneMedianMean, sceneMedianStd, sceneMedianEdge) {
   const brightDelta = sample.mean - sceneMedianMean
   const textureDelta = sample.stddev - sceneMedianStd
+  const edgeDelta = sample.edgeDensity - sceneMedianEdge
 
-  // Clearly above median on both axes → device front
-  if (brightDelta >= ADAPTIVE_BRIGHT_MARGIN && textureDelta >= ADAPTIVE_TEXTURE_MARGIN) {
-    return 'belegt'
-  }
-  // Clearly below median on both axes → empty rack interior
-  if (brightDelta <= -ADAPTIVE_BRIGHT_MARGIN && textureDelta <= -ADAPTIVE_TEXTURE_MARGIN) {
-    return 'leer'
-  }
+  const brightHigh = brightDelta >= ADAPTIVE_BRIGHT_MARGIN
+  const textureHigh = textureDelta >= ADAPTIVE_TEXTURE_MARGIN
+  const edgeHigh = edgeDelta >= ADAPTIVE_EDGE_MARGIN
+  const brightLow = brightDelta <= -ADAPTIVE_BRIGHT_MARGIN
+  const textureLow = textureDelta <= -ADAPTIVE_TEXTURE_MARGIN
+  const edgeLow = edgeDelta <= -ADAPTIVE_EDGE_MARGIN
+
+  // 2-of-3 voting: at least two features clearly above scene median → belegt
+  const highVotes = (brightHigh ? 1 : 0) + (textureHigh ? 1 : 0) + (edgeHigh ? 1 : 0)
+  if (highVotes >= 2) return 'belegt'
+
+  // 2-of-3 voting: at least two features clearly below scene median → leer
+  const lowVotes = (brightLow ? 1 : 0) + (textureLow ? 1 : 0) + (edgeLow ? 1 : 0)
+  if (lowVotes >= 2) return 'leer'
+
   // Inconclusive → consult the absolute-threshold classifier as a sanity
   // check. This catches "the whole scene is clearly dark" (median is low,
   // no HE stands out, but absolute brightness still says 'leer').
   return classifyOccupancy(sample)
+}
+
+// Majority-vote classification across multiple sub-samples of one HE.
+// A HE is divided vertically into 3 zones (top / center / bottom); each
+// zone is classified independently, and the final label is the majority
+// vote. If all three zones disagree, we return 'unsicher' — that captures
+// the "device bleeds into neighboring HE" case where the top of one HE
+// looks belegt because of an adjacent device.
+function voteSubZones(zoneLabels) {
+  const tally = { belegt: 0, leer: 0, unsicher: 0 }
+  for (const l of zoneLabels) tally[l] = (tally[l] || 0) + 1
+
+  // Clear majority (2 or 3 agreeing)
+  if (tally.belegt >= 2) return 'belegt'
+  if (tally.leer >= 2) return 'leer'
+  // Everything else (1/1/1 split, or majority unsicher) → unsicher
+  return 'unsicher'
 }
 
 const AR_VIEW_MODES = [
@@ -312,11 +383,20 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
           const heHalfWidth = (avgMarkerWidth * RACK_WIDTH_IN_MARKER_WIDTHS) / 2
 
           // Sample each HE region on the image (not the overlay).
-          // Two-pass: first pass samples + smooths, second pass classifies
-          // using scene-relative statistics so results adapt to lighting.
+          // Three-zone sub-HE sampling: each HE is divided vertically into
+          // top / center / bottom zones. Each zone gets its own sample and
+          // its own temporal-smoothing history. In the second pass each
+          // zone is classified independently and the HE's final label is
+          // the majority vote — this catches "device bleed" where a bright
+          // neighbour contaminates only part of an otherwise empty HE.
           const newIst = {}
           const quads = [] // for drawing
-          const smoothedSamples = {} // u → { mean, stddev }
+          const smoothedSamples = {} // u → [topSample, midSample, botSample]
+
+          // Vertical offsets (as fraction of half-HE-height) for the three
+          // sub-zones. 0 = HE center; negative = toward bottom of HE;
+          // positive = toward top of HE.
+          const ZONE_OFFSETS = [-0.55, 0, 0.55] // bottom, center, top
 
           for (let u = 1; u <= totalUnits; u++) {
             // HE u spans t=[u-1, u] / totalUnits between bottom→top marker
@@ -334,28 +414,45 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
 
             // HE cell height (vertical span of one HE along the rack axis)
             const heLenOnImage = len / totalUnits
-            // ROI shrinkage: sample only the inner ~60 % of each HE so that
-            // screws, rack-frame edges and neighboring-HE shadows don't
-            // contaminate the reading. Empirically this is the single most
-            // impactful fix for "unsicher" false positives on 1U devices.
-            const halfH = heLenOnImage * 0.32
+            // Per-zone ROI: 3 zones stacked vertically inside the inner ~80 %
+            // of the HE. Each zone is ~22 % of HE height; total coverage
+            // ~65 % (leaves margins to the HE boundary to avoid frame edges).
+            const zoneHalfH = heLenOnImage * 0.11
             const halfW = heHalfWidth * 0.60
 
-            const rawSample = sampleRegion(imageData, cx, cy, halfW, halfH)
+            // Unit vector along the rack axis (bottom→top in image space)
+            // so that zone offsets work correctly even if the rack is tilted.
+            const axisX = (topC.x - botC.x) / len
+            const axisY = (topC.y - botC.y) / len
 
-            // Temporal smoothing: push into per-HE ring buffer, classify on
-            // the average of the last N samples instead of the current frame.
-            const history = sampleHistoryRef.current[u] ?? []
-            history.push(rawSample)
-            if (history.length > SAMPLE_HISTORY_SIZE) history.shift()
-            sampleHistoryRef.current[u] = history
+            const zoneSmoothed = []
+            for (let z = 0; z < 3; z++) {
+              const offset = ZONE_OFFSETS[z] * (heLenOnImage / 2)
+              const zcx = cx + axisX * offset
+              const zcy = cy + axisY * offset
 
-            let sumMean = 0, sumStd = 0
-            for (const s of history) { sumMean += s.mean; sumStd += s.stddev }
-            smoothedSamples[u] = {
-              mean: sumMean / history.length,
-              stddev: sumStd / history.length,
+              const rawSample = sampleRegion(imageData, zcx, zcy, halfW, zoneHalfH)
+
+              // Temporal smoothing per (HE, zone)
+              const key = `${u}_${z}`
+              const history = sampleHistoryRef.current[key] ?? []
+              history.push(rawSample)
+              if (history.length > SAMPLE_HISTORY_SIZE) history.shift()
+              sampleHistoryRef.current[key] = history
+
+              let sumMean = 0, sumStd = 0, sumEdge = 0
+              for (const s of history) {
+                sumMean += s.mean
+                sumStd += s.stddev
+                sumEdge += s.edgeDensity
+              }
+              zoneSmoothed.push({
+                mean: sumMean / history.length,
+                stddev: sumStd / history.length,
+                edgeDensity: sumEdge / history.length,
+              })
             }
+            smoothedSamples[u] = zoneSmoothed
             // Classification is deferred to the second pass below, once we
             // have scene-wide statistics to compare against.
 
@@ -379,27 +476,32 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
             quads.push({ u, tl, tr, br, bl })
           }
 
-          // Second pass: compute scene-relative statistics, then classify
-          // each HE against them. This makes the classifier resilient to
-          // global lighting changes (bright daylight vs. dim LTE capture)
-          // and to "device bleed" into neighboring empty HEs — an empty HE
-          // next to a bright switch will still be relatively darker than
-          // the actual device rows, so it gets classified as 'leer'.
+          // Second pass: compute scene-relative statistics from the center
+          // zone of each HE (least affected by neighbour-bleed), then
+          // classify all 3 zones of each HE independently and majority-vote.
           const allMeans = []
           const allStds = []
+          const allEdges = []
           for (let u = 1; u <= totalUnits; u++) {
-            allMeans.push(smoothedSamples[u].mean)
-            allStds.push(smoothedSamples[u].stddev)
+            const centerZone = smoothedSamples[u][1] // index 1 = center
+            allMeans.push(centerZone.mean)
+            allStds.push(centerZone.stddev)
+            allEdges.push(centerZone.edgeDensity)
           }
           const sceneMedianMean = median(allMeans)
           const sceneMedianStd = median(allStds)
+          const sceneMedianEdge = median(allEdges)
 
           for (let u = 1; u <= totalUnits; u++) {
-            newIst[u] = classifyAdaptive(
-              smoothedSamples[u],
-              sceneMedianMean,
-              sceneMedianStd
+            const zoneLabels = smoothedSamples[u].map(sample =>
+              classifyAdaptive(
+                sample,
+                sceneMedianMean,
+                sceneMedianStd,
+                sceneMedianEdge
+              )
             )
+            newIst[u] = voteSubZones(zoneLabels)
           }
 
           setIstMap(prev => {
