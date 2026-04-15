@@ -136,10 +136,17 @@ export default function DeviceDetail({ device, cables, allDevices, onBack, onUpd
                   </div>
                   <div className="flex-1 min-w-0">
                     {connected ? (
-                      <div className="text-sm text-gray-300">
-                        → <span className="text-cyan-400">{connected.device.name}</span>
-                        <span className="text-gray-500"> : {connected.port.name}</span>
-                      </div>
+                      <>
+                        <div className="text-sm text-gray-300">
+                          → <span className="text-cyan-400">{connected.device.name}</span>
+                          <span className="text-gray-500"> : {connected.port.name}</span>
+                        </div>
+                        {(connected.device.status === 'verschollen' || connected.device.status === 'defekt') && (
+                          <div className="text-xs text-orange-400 mt-0.5">
+                            ⚠ Gegenstelle als {connected.device.status} gemeldet – Verbindung laut Plan aktiv
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <div className="text-sm text-gray-600">Nicht verbunden</div>
                     )}
