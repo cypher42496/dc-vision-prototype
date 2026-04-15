@@ -621,18 +621,27 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
       if (device) {
         if (seenDevices.has(device.id)) continue
         seenDevices.add(device.id)
-        const sollOccupied = true
         // Device ist belegt only if all of its HEs are marked belegt
         let allBelegt = true
         for (let i = 0; i < device.height; i++) {
           if (istMap[device.position + i] !== 'belegt') { allBelegt = false; break }
         }
         const istOccupied = allBelegt
-        const status = istOccupied ? 'correct' : 'missing'
+        // Blindpanels are passive, visually near-identical to an empty HE.
+        // Pure vision can't reliably tell them apart, so we downgrade a
+        // "not detected" result for a blindpanel from a hard 'missing'
+        // to a soft 'blindpanel_unconfirmed' that only asks for visual
+        // confirmation rather than flagging it as a real deviation.
+        const isBlindpanel = device.type === 'blindpanel'
+        let status
+        if (istOccupied) status = 'correct'
+        else if (isBlindpanel) status = 'blindpanel_unconfirmed'
+        else status = 'missing'
         results.push({
           he: device.position,
           height: device.height,
           deviceName: device.name,
+          deviceType: device.type,
           soll: 'belegt',
           ist: istOccupied ? 'belegt' : 'leer',
           status,

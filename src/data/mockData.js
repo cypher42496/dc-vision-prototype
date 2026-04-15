@@ -521,6 +521,7 @@ export const mockData = {
         {
           id: 'TEST-DEV-005',
           name: 'Blindpanel HE 4',
+          type: 'blindpanel',
           manufacturer: 'Generisch',
           model: 'Blindpanel 1U schwarz',
           formFactor: '1U',
@@ -535,6 +536,7 @@ export const mockData = {
         {
           id: 'TEST-DEV-006',
           name: 'Blindpanel HE 3',
+          type: 'blindpanel',
           manufacturer: 'Generisch',
           model: 'Blindpanel 1U schwarz',
           formFactor: '1U',
@@ -549,6 +551,7 @@ export const mockData = {
         {
           id: 'TEST-DEV-007',
           name: 'Blindpanel HE 2',
+          type: 'blindpanel',
           manufacturer: 'Generisch',
           model: 'Blindpanel 1U schwarz',
           formFactor: '1U',
@@ -563,6 +566,7 @@ export const mockData = {
         {
           id: 'TEST-DEV-008',
           name: 'Blindpanel HE 1',
+          type: 'blindpanel',
           manufacturer: 'Generisch',
           model: 'Blindpanel 1U schwarz',
           formFactor: '1U',

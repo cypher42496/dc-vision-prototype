@@ -2,10 +2,18 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
   const correct = results.filter(r => r.status === 'correct')
   const missing = results.filter(r => r.status === 'missing')
   const unexpected = results.filter(r => r.status === 'unexpected')
+  // Blind panels are reported separately because they are visually
+  // indistinguishable from an empty HE; a "not detected" result here
+  // only means "please confirm visually", not "real deviation".
+  const blindpanelUnconfirmed = results.filter(r => r.status === 'blindpanel_unconfirmed')
   const deviations = [...missing, ...unexpected]
   const total = results.length
 
-  const matchPercent = total > 0 ? Math.round((correct.length / total) * 100) : 0
+  // For the match percentage, blindpanel_unconfirmed counts as "soft OK"
+  // (½ weight) — acknowledging that the plan expects them, even if the
+  // vision heuristic can't positively confirm them.
+  const matchScore = correct.length + blindpanelUnconfirmed.length * 0.5
+  const matchPercent = total > 0 ? Math.round((matchScore / total) * 100) : 0
 
   return (
     <div className="fixed inset-0 z-50 bg-gray-950 overflow-auto">
@@ -38,6 +46,11 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
         </div>
         <p className="text-sm text-gray-400 mb-6">
           {correct.length} von {total} Positionen korrekt ({matchPercent}%)
+          {blindpanelUnconfirmed.length > 0 && (
+            <span className="text-gray-500">
+              {' '}– zzgl. {blindpanelUnconfirmed.length} Blindpanel{blindpanelUnconfirmed.length === 1 ? '' : 'e'} zu bestätigen
+            </span>
+          )}
         </p>
 
         {/* Correct positions */}
@@ -52,6 +65,31 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
                   <span className="text-emerald-400 text-sm">✓</span>
                   <span className="text-xs text-gray-400 font-mono w-12">HE {r.he}</span>
                   <span className="text-sm text-white">{r.deviceName}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Blind panels — soft category, visual confirmation required */}
+        {blindpanelUnconfirmed.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-3">
+              Blindpanele – visuelle Prüfung ({blindpanelUnconfirmed.length})
+            </h3>
+            <p className="text-xs text-gray-500 mb-2">
+              Blindpanele sind für die Kamera nicht sicher von einer leeren HE zu unterscheiden.
+              Bitte vor Ort prüfen, ob das Panel tatsächlich eingebaut ist.
+            </p>
+            <div className="space-y-1">
+              {blindpanelUnconfirmed.map((r, i) => (
+                <div key={i} className="flex items-center gap-3 bg-amber-500/5 border border-amber-500/20 rounded px-3 py-2">
+                  <span className="text-amber-400 text-sm">?</span>
+                  <span className="text-xs text-gray-400 font-mono w-12">HE {r.he}</span>
+                  <div>
+                    <span className="text-sm text-white">{r.deviceName}</span>
+                    <span className="text-xs text-amber-400 ml-2">– bitte visuell bestätigen</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -101,10 +139,18 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
         )}
 
         {/* No deviations */}
-        {deviations.length === 0 && (
+        {deviations.length === 0 && blindpanelUnconfirmed.length === 0 && (
           <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 text-center mb-6">
             <div className="text-lg text-emerald-400 font-medium">Keine Abweichungen!</div>
             <div className="text-sm text-gray-400 mt-1">Alle Positionen stimmen mit dem DCIM-Plan überein.</div>
+          </div>
+        )}
+        {deviations.length === 0 && blindpanelUnconfirmed.length > 0 && (
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 text-center mb-6">
+            <div className="text-lg text-emerald-400 font-medium">Keine kritischen Abweichungen</div>
+            <div className="text-sm text-gray-400 mt-1">
+              Alle aktiven Geräte stimmen mit dem Plan überein. Nur die oben gelisteten Blindpanele benötigen eine visuelle Bestätigung.
+            </div>
           </div>
         )}
 
