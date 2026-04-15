@@ -109,6 +109,69 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     }
   })
 
+  // --- Connection layout for network mode ---
+  // Compute pixel Y-center for every device (measured from top of rack stack).
+  // Rows are rendered top-to-bottom (highest HE first), so Y grows downward.
+  const deviceYCenter = {}
+  {
+    let y = 0
+    for (let u = rack.totalUnits; u >= 1; u--) {
+      const device = unitMap[u]
+      if (device && u !== device.position + device.height - 1) continue
+      const height = device ? device.height : 1
+      const rowHeight = height * UNIT_HEIGHT + (height - 1) * GAP
+      if (device) {
+        deviceYCenter[device.id] = y + rowHeight / 2
+      }
+      y += rowHeight + GAP
+    }
+  }
+
+  // Total rack stack height (for SVG viewBox).
+  const rackStackHeight = (() => {
+    let y = 0
+    for (let u = rack.totalUnits; u >= 1; u--) {
+      const device = unitMap[u]
+      if (device && u !== device.position + device.height - 1) continue
+      const height = device ? device.height : 1
+      const rowHeight = height * UNIT_HEIGHT + (height - 1) * GAP
+      y += rowHeight + GAP
+    }
+    return Math.max(0, y - GAP)
+  })()
+
+  // Derive unique device-to-device connections within this rack.
+  // A connection is "ok" if both endpoints are plan-konform
+  // (status === plannedStatus === 'produktiv', no plannedModel).
+  // Otherwise it's flagged as problematic (orange, dashed).
+  const isDeviceHealthy = (d) =>
+    d.status === 'produktiv' &&
+    d.plannedStatus === 'produktiv' &&
+    !d.plannedModel
+  const connections = []
+  {
+    const seen = new Set()
+    rack.devices.forEach(dev => {
+      (dev.ports ?? []).forEach(port => {
+        if (!port.connectedTo) return
+        const target = rack.devices.find(d =>
+          (d.ports ?? []).some(p => p.id === port.connectedTo)
+        )
+        if (!target || target.id === dev.id) return
+        const key = [dev.id, target.id].sort().join('|')
+        if (seen.has(key)) return
+        seen.add(key)
+        const ok = isDeviceHealthy(dev) && isDeviceHealthy(target)
+        const problemReason = ok
+          ? null
+          : !isDeviceHealthy(dev)
+            ? `${dev.name}: ${dev.status}`
+            : `${target.name}: ${target.status}`
+        connections.push({ from: dev, to: target, ok, problemReason })
+      })
+    })
+  }
+
   // Render top to bottom
   const rows = []
   for (let u = rack.totalUnits; u >= 1; u--) {
@@ -293,8 +356,51 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
 
       {/* Rack visualization */}
       <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
-        <div className="flex flex-col gap-[2px]">
-          {rows}
+        <div className="flex items-start gap-0">
+          <div className="flex-1 flex flex-col gap-[2px] min-w-0">
+            {rows}
+          </div>
+          {viewMode === 'network' && connections.length > 0 && (
+            <div
+              className="shrink-0 relative"
+              style={{ width: '110px', height: `${rackStackHeight}px` }}
+              aria-label="Verbindungsgrafik"
+            >
+              <svg
+                width="110"
+                height={rackStackHeight}
+                viewBox={`0 0 110 ${rackStackHeight}`}
+                className="absolute top-0 left-0 pointer-events-none"
+              >
+                {connections.map((c, i) => {
+                  const y1 = deviceYCenter[c.from.id]
+                  const y2 = deviceYCenter[c.to.id]
+                  if (y1 === undefined || y2 === undefined) return null
+                  // Stagger the bulge per connection to avoid overlap
+                  const bulge = 55 + (i % 3) * 15
+                  const stroke = c.ok ? '#60a5fa' : '#fb923c'
+                  const dash = c.ok ? undefined : '5 4'
+                  return (
+                    <g key={`${c.from.id}-${c.to.id}`}>
+                      <path
+                        d={`M 0 ${y1} C ${bulge} ${y1}, ${bulge} ${y2}, 0 ${y2}`}
+                        stroke={stroke}
+                        strokeWidth="2"
+                        fill="none"
+                        strokeDasharray={dash}
+                        strokeLinecap="round"
+                      />
+                      <circle cx="0" cy={y1} r="3.5" fill={stroke} />
+                      <circle cx="0" cy={y2} r="3.5" fill={stroke} />
+                      {!c.ok && (
+                        <title>{c.problemReason}</title>
+                      )}
+                    </g>
+                  )
+                })}
+              </svg>
+            </div>
+          )}
         </div>
       </div>
 
@@ -340,6 +446,22 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
             <div className="w-3 h-3 rounded bg-gray-700/50 border border-gray-600"></div>
             {viewMode === 'network' ? 'Keine Ports' : 'Keine Info hinterlegt'}
           </div>
+          {viewMode === 'network' && (
+            <>
+              <div className="flex items-center gap-2">
+                <svg width="22" height="10" aria-hidden="true">
+                  <path d="M 0 5 C 14 5, 14 5, 22 5" stroke="#60a5fa" strokeWidth="2" fill="none" strokeLinecap="round" />
+                </svg>
+                Verbindung (plan-konform)
+              </div>
+              <div className="flex items-center gap-2">
+                <svg width="22" height="10" aria-hidden="true">
+                  <path d="M 0 5 C 14 5, 14 5, 22 5" stroke="#fb923c" strokeWidth="2" fill="none" strokeDasharray="5 4" strokeLinecap="round" />
+                </svg>
+                Verbindung mit Abweichung
+              </div>
+            </>
+          )}
         </div>
       )}
 
