@@ -3,7 +3,7 @@ import { mockData } from './data/mockData'
 
 // localStorage persistence: bumping this version invalidates older saves
 // when the data shape changes.
-const STORAGE_KEY = 'dc-vision-data-v1'
+const STORAGE_KEY = 'dc-vision-data-v2'
 
 function loadInitialData() {
   if (typeof window === 'undefined') return mockData
