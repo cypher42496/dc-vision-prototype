@@ -220,12 +220,16 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
   const [status, setStatus] = useState('Kamera starten …')
   const [markersSeen, setMarkersSeen] = useState({ top: false, bottom: false })
   const [istMap, setIstMap] = useState({})
+  const istMapRef = useRef({})          // mirror of istMap readable inside the canvas loop
   const userOverridesRef = useRef({})
   // Per-HE ring buffer of raw samples { mean, stddev } for temporal smoothing
   const sampleHistoryRef = useRef({})
   const [, forceRerender] = useState(0)
   const [arViewMode, setArViewMode] = useState('normal')
   const arViewModeRef = useRef('normal')
+
+  // Keep istMapRef in sync so the canvas loop always reads current detection
+  useEffect(() => { istMapRef.current = istMap }, [istMap])
 
   // Pre-computed device-to-device connections for the network overlay.
   // Stored in a ref so the canvas loop (inside useEffect) can read the
@@ -251,7 +255,10 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
           fromHeight: dev.height,
           toPos: target.position,
           toHeight: target.height,
-          ok: isHealthy(dev) && isHealthy(target),
+          // Plan-level health only; AR-detection check happens at draw time
+          // using istMapRef so that ok reflects the live camera result.
+          fromHealthy: isHealthy(dev),
+          toHealthy: isHealthy(target),
         })
       })
     })
@@ -613,6 +620,18 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
           // right-side midpoint of each device's centre HE, bulging outward
           // to the right of the screen. Blue = plan-konform, Orange = problem.
           if (currentMode === 'network') {
+            // Returns true if all HEs of a device are currently detected as
+            // 'belegt' by the camera. 'undefined' (no data yet) and 'unsicher'
+            // are treated as "still unknown" → don't flag as problematic yet.
+            // Only explicit 'leer' triggers the orange/problem state.
+            const isDeviceDetected = (pos, height) => {
+              for (let i = 0; i < height; i++) {
+                const v = istMapRef.current[pos + i]
+                if (v === 'leer') return false
+              }
+              return true
+            }
+
             const cons = networkConnectionsRef.current
             cons.forEach((c, i) => {
               const fromCenterHE = c.fromPos + Math.floor(c.fromHeight / 2)
@@ -627,16 +646,21 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
               const ax2 = (toQ.tr.x   + toQ.br.x)   / 2
               const ay2 = (toQ.tr.y   + toQ.br.y)   / 2
 
+              // ok = plan healthy AND both devices physically detected by AR
+              const ok = c.fromHealthy && c.toHealthy &&
+                         isDeviceDetected(c.fromPos, c.fromHeight) &&
+                         isDeviceDetected(c.toPos,   c.toHeight)
+
               // Stagger bulge so parallel lines don't overlap
               const bulge = 55 + i * 18
-              const color = c.ok ? 'rgba(96,165,250,0.95)' : 'rgba(251,146,60,0.95)'
+              const color = ok ? 'rgba(96,165,250,0.95)' : 'rgba(251,146,60,0.95)'
 
               ctxOverlay.save()
               ctxOverlay.lineWidth = 2.5
               ctxOverlay.strokeStyle = color
               ctxOverlay.lineJoin = 'round'
               ctxOverlay.lineCap  = 'round'
-              if (!c.ok) ctxOverlay.setLineDash([6, 4])
+              if (!ok) ctxOverlay.setLineDash([6, 4])
               ctxOverlay.beginPath()
               ctxOverlay.moveTo(ax1, ay1)
               ctxOverlay.bezierCurveTo(ax1 + bulge, ay1, ax1 + bulge, ay2, ax2, ay2)
