@@ -226,6 +226,38 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
   const [, forceRerender] = useState(0)
   const [arViewMode, setArViewMode] = useState('normal')
   const arViewModeRef = useRef('normal')
+
+  // Pre-computed device-to-device connections for the network overlay.
+  // Stored in a ref so the canvas loop (inside useEffect) can read the
+  // latest value without being re-created on every rack prop change.
+  const networkConnectionsRef = useRef([])
+  useEffect(() => {
+    const isHealthy = (d) =>
+      d.status === 'produktiv' && d.plannedStatus === 'produktiv' && !d.plannedModel
+    const result = []
+    const seen = new Set()
+    rack.devices.forEach(dev => {
+      ;(dev.ports ?? []).forEach(port => {
+        if (!port.connectedTo) return
+        const target = rack.devices.find(d =>
+          (d.ports ?? []).some(p => p.id === port.connectedTo)
+        )
+        if (!target || target.id === dev.id) return
+        const key = [dev.id, target.id].sort().join('|')
+        if (seen.has(key)) return
+        seen.add(key)
+        result.push({
+          fromPos: dev.position,
+          fromHeight: dev.height,
+          toPos: target.position,
+          toHeight: target.height,
+          ok: isHealthy(dev) && isHealthy(target),
+        })
+      })
+    })
+    networkConnectionsRef.current = result
+  }, [rack])
+
   const handleSetArViewMode = (m) => {
     if (m === 'manual') {
       onSwitchMode?.()
@@ -574,6 +606,53 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
             ctxOverlay.textAlign = 'center'
             ctxOverlay.textBaseline = 'middle'
             ctxOverlay.fillText(`HE ${q.u}`, labelX, labelY)
+          }
+
+          // --- Network mode: draw device-to-device connection lines ---
+          // Only in network mode. Lines are Bezier curves anchored to the
+          // right-side midpoint of each device's centre HE, bulging outward
+          // to the right of the screen. Blue = plan-konform, Orange = problem.
+          if (currentMode === 'network') {
+            const cons = networkConnectionsRef.current
+            cons.forEach((c, i) => {
+              const fromCenterHE = c.fromPos + Math.floor(c.fromHeight / 2)
+              const toCenterHE   = c.toPos   + Math.floor(c.toHeight   / 2)
+              const fromQ = quads.find(q => q.u === fromCenterHE)
+              const toQ   = quads.find(q => q.u === toCenterHE)
+              if (!fromQ || !toQ) return
+
+              // Right-edge midpoints of each device's centre HE quad
+              const ax1 = (fromQ.tr.x + fromQ.br.x) / 2
+              const ay1 = (fromQ.tr.y + fromQ.br.y) / 2
+              const ax2 = (toQ.tr.x   + toQ.br.x)   / 2
+              const ay2 = (toQ.tr.y   + toQ.br.y)   / 2
+
+              // Stagger bulge so parallel lines don't overlap
+              const bulge = 55 + i * 18
+              const color = c.ok ? 'rgba(96,165,250,0.95)' : 'rgba(251,146,60,0.95)'
+
+              ctxOverlay.save()
+              ctxOverlay.lineWidth = 2.5
+              ctxOverlay.strokeStyle = color
+              ctxOverlay.lineJoin = 'round'
+              ctxOverlay.lineCap  = 'round'
+              if (!c.ok) ctxOverlay.setLineDash([6, 4])
+              ctxOverlay.beginPath()
+              ctxOverlay.moveTo(ax1, ay1)
+              ctxOverlay.bezierCurveTo(ax1 + bulge, ay1, ax1 + bulge, ay2, ax2, ay2)
+              ctxOverlay.stroke()
+              ctxOverlay.setLineDash([])
+
+              // Endpoint dots
+              ctxOverlay.fillStyle = color
+              ctxOverlay.beginPath()
+              ctxOverlay.arc(ax1, ay1, 4, 0, Math.PI * 2)
+              ctxOverlay.fill()
+              ctxOverlay.beginPath()
+              ctxOverlay.arc(ax2, ay2, 4, 0, Math.PI * 2)
+              ctxOverlay.fill()
+              ctxOverlay.restore()
+            })
           }
         } else {
           // Show marker status
