@@ -554,6 +554,16 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
             return same ? prev : merged
           })
 
+          // Helper used both for quad coloring and connection lines below.
+          // A device is "detected" when none of its HEs are explicitly 'leer'.
+          // 'undefined'/'unsicher' = not yet classified → don't flag orange yet.
+          const isDeviceDetected = (pos, height) => {
+            for (let i = 0; i < height; i++) {
+              if (istMapRef.current[pos + i] === 'leer') return false
+            }
+            return true
+          }
+
           // Draw each HE quad with state color
           const currentMode = arViewModeRef.current
           for (const q of quads) {
@@ -574,7 +584,13 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
               else if (currentMode === 'environment') hasInfo = !!(device && device.environmentInfo)
               else if (currentMode === 'network') hasInfo = !!(device && device.ports && device.ports.length > 0)
 
-              if (hasInfo) {
+              // Network mode: orange if device has connections but isn't detected
+              const networkProblem = currentMode === 'network' && hasInfo &&
+                !isDeviceDetected(device.position, device.height)
+
+              if (networkProblem) {
+                fill = 'rgba(251,146,60,0.35)'; stroke = 'rgba(251,146,60,0.95)'
+              } else if (hasInfo) {
                 fill = 'rgba(59,130,246,0.35)'; stroke = 'rgba(59,130,246,0.95)'
               } else if (device) {
                 fill = 'rgba(100,116,139,0.15)'; stroke = 'rgba(148,163,184,0.5)'
@@ -620,18 +636,6 @@ export default function MarkerGrid({ rack, onComplete, onCancel, onSwitchMode })
           // right-side midpoint of each device's centre HE, bulging outward
           // to the right of the screen. Blue = plan-konform, Orange = problem.
           if (currentMode === 'network') {
-            // Returns true if all HEs of a device are currently detected as
-            // 'belegt' by the camera. 'undefined' (no data yet) and 'unsicher'
-            // are treated as "still unknown" → don't flag as problematic yet.
-            // Only explicit 'leer' triggers the orange/problem state.
-            const isDeviceDetected = (pos, height) => {
-              for (let i = 0; i < height; i++) {
-                const v = istMapRef.current[pos + i]
-                if (v === 'leer') return false
-              }
-              return true
-            }
-
             const cons = networkConnectionsRef.current
             cons.forEach((c, i) => {
               const fromCenterHE = c.fromPos + Math.floor(c.fromHeight / 2)
