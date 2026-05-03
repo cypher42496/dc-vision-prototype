@@ -133,12 +133,23 @@ function App() {
     setData(mockData)
   }
 
+  const handleSaveARResults = (rackId, results) => {
+    setData(prev => ({
+      ...prev,
+      racks: prev.racks.map(rack =>
+        rack.id === rackId
+          ? { ...rack, lastScanResults: results, lastScanAt: new Date().toISOString() }
+          : rack
+      )
+    }))
+  }
+
   const handleExitAR = () => {
     setCurrentView('rack')
   }
 
   if (currentView === 'ar') {
-    return <ARMarkerMode racks={data.racks} onExit={handleExitAR} />
+    return <ARMarkerMode racks={data.racks} onExit={handleExitAR} onSaveResults={handleSaveARResults} />
   }
 
   const renderView = () => {
@@ -165,7 +176,7 @@ function App() {
         )
       case 'comparison':
         return (
-          <ComparisonView rack={selectedRack} />
+          <ComparisonView rack={selectedRack} onStartScan={() => setCurrentView('ar')} />
         )
       case 'cabling':
         return (

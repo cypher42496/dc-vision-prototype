@@ -40,7 +40,7 @@ class ARErrorBoundary extends Component {
   }
 }
 
-function ARModeInner({ racks, onExit }) {
+function ARModeInner({ racks, onExit, onSaveResults }) {
   const [phase, setPhase] = useState('scanning')
   const [selectedRack, setSelectedRack] = useState(null)
   const [results, setResults] = useState(null)
@@ -59,6 +59,7 @@ function ARModeInner({ racks, onExit }) {
   const handleGridComplete = (comparisonResults) => {
     setResults(comparisonResults)
     setPhase('summary')
+    onSaveResults(selectedRack.id, comparisonResults)
   }
 
   const handleScanNew = () => {
@@ -113,10 +114,10 @@ function ARModeInner({ racks, onExit }) {
   return null
 }
 
-export default function ARMarkerMode({ racks, onExit }) {
+export default function ARMarkerMode({ racks, onExit, onSaveResults }) {
   return (
     <ARErrorBoundary onExit={onExit}>
-      <ARModeInner racks={racks} onExit={onExit} />
+      <ARModeInner racks={racks} onExit={onExit} onSaveResults={onSaveResults} />
     </ARErrorBoundary>
   )
 }

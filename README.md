@@ -44,14 +44,6 @@ npm run dev
 
 Die Anwendung ist anschließend unter `http://localhost:5173` erreichbar.
 
-Alternativ lässt sich ein statischer Build erzeugen (`npm run build`), dessen Ausgabe im Ordner `dist/` auf jedem beliebigen Webserver oder Static-Hosting-Dienst deployed werden kann.
-
----
-
-## Entwicklungsworkflow (Überblick)
-
-Das Projekt wurde lokal in VS Code entwickelt, per Git zu GitHub gepusht und von dort automatisch über Vercel deployed. Jeder Push auf den `main`-Branch löst einen neuen Build aus — die Live-URL ist damit stets aktuell.
-
 ---
 
 ## Hinweise
@@ -59,3 +51,9 @@ Das Projekt wurde lokal in VS Code entwickelt, per Git zu GitHub gepusht und von
 - Die AR-Funktion erfordert eine Kameraberechtigung im Browser (HTTPS oder localhost).
 - Für optimale Erkennung sollten die ArUco-Marker (MIP 36h12, ID 0 oben / ID 1 unten) ausgedruckt und am Rack befestigt sein.
 - Lokale Änderungen an Geräten und Racks werden im localStorage des Browsers gespeichert und überleben Seitenneuladen.
+
+---
+
+## Lizenzhinweise
+
+Alle verwendeten Bibliotheken stehen unter offenen Lizenzen (MIT bzw. Apache 2.0). Die jeweiligen Lizenzhinweise befinden sich in den entsprechenden Paketen unter `node_modules`.
