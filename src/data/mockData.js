@@ -1,6 +1,5 @@
 export const mockData = {
   racks: [
-    // ========== RACK A01: Voll bestückt – für UC 1 (Soll/Ist) und UC 2 (Verkabelung) ==========
     {
       id: 'RACK-A01',
       name: 'Rack A01',
@@ -189,7 +188,6 @@ export const mockData = {
       ]
     },
 
-    // ========== RACK A02: Teilweise bestückt mit Abweichungen – für UC 2, UC 3 ==========
     {
       id: 'RACK-A02',
       name: 'Rack A02',
@@ -211,7 +209,6 @@ export const mockData = {
             { id: 'PORT-201', name: 'Gi1/0/2', type: 'RJ45', connectedTo: 'PORT-220', cableId: 'K-2024-0013', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-202', name: 'Gi1/0/3', type: 'RJ45', connectedTo: 'PORT-230', cableId: 'K-2024-0014', status: 'verbunden', plannedStatus: 'verbunden' },
             { id: 'PORT-203', name: 'Gi1/0/4', type: 'RJ45', connectedTo: 'PORT-240', cableId: 'K-2024-0015', status: 'verbunden', plannedStatus: 'verbunden' },
-            // ABWEICHUNG: Port 5 sollte verbunden sein, ist aber nicht
             { id: 'PORT-204', name: 'Gi1/0/5', type: 'RJ45', connectedTo: null, cableId: null, status: 'nicht verbunden', plannedStatus: 'verbunden' },
           ]
         },
@@ -244,7 +241,6 @@ export const mockData = {
           plannedStatus: 'produktiv',
           ports: [
             { id: 'PORT-220', name: 'eth0', type: 'RJ45', connectedTo: 'PORT-201', cableId: 'K-2024-0013', status: 'verbunden', plannedStatus: 'verbunden' },
-            // ABWEICHUNG: Falscher Port – sollte an PORT-212 angeschlossen sein
             { id: 'PORT-221', name: 'eth1', type: 'RJ45', connectedTo: 'PORT-213', cableId: 'K-2024-0019', status: 'verbunden', plannedStatus: 'verbunden' },
           ]
         },
@@ -263,7 +259,6 @@ export const mockData = {
             { id: 'PORT-231', name: 'eth1', type: 'RJ45', connectedTo: 'PORT-211', cableId: 'K-2024-0020', status: 'verbunden', plannedStatus: 'verbunden' },
           ]
         },
-        // ABWEICHUNG: Dieses Gerät existiert real, ist aber im Plan nicht vorgesehen
         {
           id: 'DEV-024',
           name: 'srv-test-01',
@@ -301,7 +296,6 @@ export const mockData = {
           formFactor: '1U',
           position: 34,
           height: 1,
-          // ABWEICHUNG: Falsches Modell – geplant war FortiGate 400F
           status: 'produktiv',
           plannedStatus: 'produktiv',
           plannedModel: 'FortiGate 400F',
@@ -327,7 +321,6 @@ export const mockData = {
       ]
     },
 
-    // ========== RACK A03: Leer mit Planungsstand – für UC 5 (Planungsmodus) ==========
     {
       id: 'RACK-A03',
       name: 'Rack A03',
@@ -455,7 +448,6 @@ export const mockData = {
       ]
     },
 
-    // ========== RACK-TEST: Physisches 9-HE-Testrack – für Prototyp-Evaluation ==========
     {
       id: 'RACK-TEST',
       name: 'Test-Rack (9 HE)',
@@ -606,7 +598,6 @@ export const mockData = {
   ],
 
   cables: [
-    // Rack A01 Kabel
     { id: 'K-2024-0001', label: 'K-2024-0001-1m', length: '1m', sourcePort: 'PORT-001', targetPort: 'PORT-020', type: 'DAC SFP+' },
     { id: 'K-2024-0002', label: 'K-2024-0002-1m', length: '1m', sourcePort: 'PORT-002', targetPort: 'PORT-021', type: 'DAC SFP+' },
     { id: 'K-2024-0003', label: 'K-2024-0003-3m', length: '3m', sourcePort: 'PORT-003', targetPort: 'PORT-030', type: 'Cat6a' },
@@ -618,8 +609,6 @@ export const mockData = {
     { id: 'K-2024-0009', label: 'K-2024-0009-1m', length: '1m', sourcePort: 'PORT-070', targetPort: 'PORT-082', type: 'Cat6a' },
     { id: 'K-2024-0010', label: 'K-2024-0010-2m', length: '2m', sourcePort: 'PORT-080', targetPort: 'PORT-090', type: 'LC-LC OM4' },
     { id: 'K-2024-0011', label: 'K-2024-0011-2m', length: '2m', sourcePort: 'PORT-081', targetPort: 'PORT-091', type: 'LC-LC OM4' },
-
-    // Rack A02 Kabel
     { id: 'K-2024-0012', label: 'K-2024-0012-1m', length: '1m', sourcePort: 'PORT-200', targetPort: 'PORT-210', type: 'Cat6a' },
     { id: 'K-2024-0013', label: 'K-2024-0013-2m', length: '2m', sourcePort: 'PORT-201', targetPort: 'PORT-220', type: 'Cat6a' },
     { id: 'K-2024-0014', label: 'K-2024-0014-3m', length: '3m', sourcePort: 'PORT-202', targetPort: 'PORT-230', type: 'Cat6a' },
@@ -629,8 +618,6 @@ export const mockData = {
     { id: 'K-2024-0018', label: 'K-2024-0018-2m', length: '2m', sourcePort: 'PORT-213', targetPort: 'PORT-260', type: 'Cat6a' },
     { id: 'K-2024-0019', label: 'K-2024-0019-1m', length: '1m', sourcePort: 'PORT-221', targetPort: 'PORT-213', type: 'Cat6a' },
     { id: 'K-2024-0020', label: 'K-2024-0020-3m', length: '3m', sourcePort: 'PORT-231', targetPort: 'PORT-211', type: 'Cat6a' },
-
-    // RACK-TEST Kabel – drei dedizierte Verbindungen zwischen Paketfilter, Switch, Patchpanel
     { id: 'K-TEST-001', label: 'K-TEST-001-0.5m', length: '0.5m', sourcePort: 'PORT-T031', targetPort: 'PORT-T040', type: 'Cat6a' },
     { id: 'K-TEST-002', label: 'K-TEST-002-0.5m', length: '0.5m', sourcePort: 'PORT-T032', targetPort: 'PORT-T020', type: 'Cat6a' },
     { id: 'K-TEST-003', label: 'K-TEST-003-0.5m', length: '0.5m', sourcePort: 'PORT-T041', targetPort: 'PORT-T021', type: 'Cat6a' },

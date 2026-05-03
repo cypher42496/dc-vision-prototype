@@ -41,10 +41,9 @@ class ARErrorBoundary extends Component {
 }
 
 function ARModeInner({ racks, onExit }) {
-  const [phase, setPhase] = useState('scanning') // scanning | grid | summary
+  const [phase, setPhase] = useState('scanning')
   const [selectedRack, setSelectedRack] = useState(null)
   const [results, setResults] = useState(null)
-  // 'marker' = automatic detection via ArUco markers, 'manual' = manual HE tagging
   const [gridMode, setGridMode] = useState('marker')
 
   const validRackIds = racks.map(r => r.id)

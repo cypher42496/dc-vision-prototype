@@ -50,7 +50,6 @@ export default function DeviceDetail({ device, cables, allDevices, onBack, onUpd
         ← Zurück zur Rack-Übersicht
       </button>
 
-      {/* Device header */}
       <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-6">
         <div className="flex items-start justify-between">
           <div>
@@ -97,7 +96,6 @@ export default function DeviceDetail({ device, cables, allDevices, onBack, onUpd
           </div>
         )}
 
-        {/* Action buttons */}
         <div className="flex gap-3 mt-6">
           <button
             onClick={handleReportDeviation}
@@ -114,7 +112,6 @@ export default function DeviceDetail({ device, cables, allDevices, onBack, onUpd
         </div>
       </div>
 
-      {/* Ports */}
       {device.ports && device.ports.length > 0 && (
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Ports & Verbindungen</h3>

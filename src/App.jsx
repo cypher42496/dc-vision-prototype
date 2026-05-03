@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { mockData } from './data/mockData'
 
-// localStorage persistence: bumping this version invalidates older saves
-// when the data shape changes.
 const STORAGE_KEY = 'dc-vision-data-v2'
 
 function loadInitialData() {
@@ -11,13 +9,11 @@ function loadInitialData() {
     const stored = window.localStorage.getItem(STORAGE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
-      // Sanity check: must look like our data shape
       if (parsed && Array.isArray(parsed.racks) && Array.isArray(parsed.cables)) {
         return parsed
       }
     }
   } catch {
-    // Corrupted store — fall back to mock
   }
   return mockData
 }
@@ -37,13 +33,11 @@ function App() {
   const [data, setData] = useState(loadInitialData)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  // Persist data to localStorage on every change so device edits survive reloads.
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
     } catch {
-      // Quota exceeded or storage disabled — silently ignore
     }
   }, [data])
 
@@ -89,7 +83,6 @@ function App() {
         ...rack,
         devices: rack.devices.filter(d => d.id !== deviceId)
       })),
-      // Remove cables that referenced the deleted device on either end
       cables: prev.cables.filter(
         c => c.fromDevice !== deviceId && c.toDevice !== deviceId
       )
@@ -112,7 +105,6 @@ function App() {
       if (!ok) return
     }
     setData(prev => {
-      // Collect all device IDs in this rack for cable cleanup
       const rack = prev.racks.find(r => r.id === rackId)
       const deviceIds = new Set(rack?.devices.map(d => d.id) ?? [])
       const portIds = new Set(rack?.devices.flatMap(d => (d.ports ?? []).map(p => p.id)) ?? [])
@@ -124,7 +116,6 @@ function App() {
         )
       }
     })
-    // Select another rack if available
     setSelectedRackId(prev => {
       const remaining = data.racks.filter(r => r.id !== rackId)
       if (remaining.length > 0) return remaining[0].id
@@ -146,7 +137,6 @@ function App() {
     setCurrentView('rack')
   }
 
-  // AR mode is a fullscreen overlay
   if (currentView === 'ar') {
     return <ARMarkerMode racks={data.racks} onExit={handleExitAR} />
   }
@@ -198,7 +188,6 @@ case 'qrcodes':
     }
   }
 
-  // Close sidebar when navigating on mobile
   const handleViewChange = (view) => {
     setCurrentView(view)
     setSidebarOpen(false)
@@ -206,7 +195,6 @@ case 'qrcodes':
 
   return (
     <div className="flex h-screen bg-gray-950 text-gray-200">
-      {/* Mobile hamburger button */}
       <button
         onClick={() => setSidebarOpen(true)}
         className="fixed top-3 left-3 z-40 md:hidden p-2 bg-gray-900 border border-gray-800 rounded-lg text-gray-300 hover:text-white"
@@ -217,7 +205,6 @@ case 'qrcodes':
         </svg>
       </button>
 
-      {/* Backdrop overlay on mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
@@ -225,7 +212,6 @@ case 'qrcodes':
         />
       )}
 
-      {/* Sidebar: always visible on md+, slide-in on mobile */}
       <div className={`
         fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 ease-in-out
         md:relative md:translate-x-0 md:transform-none

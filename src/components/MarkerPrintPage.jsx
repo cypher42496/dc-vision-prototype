@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react'
 
-// Generate the SVG string for an ArUco marker using the globally loaded
-// js-aruco2 library (see index.html <script> tags). Falls back to a placeholder
-// while the script is still loading.
 function getMarkerSVG(id) {
   if (typeof window === 'undefined' || !window.AR) return null
   try {
@@ -32,7 +29,6 @@ const MARKERS = [
 export default function MarkerPrintPage({ onBack }) {
   const [ready, setReady] = useState(typeof window !== 'undefined' && !!window.AR)
 
-  // Wait for js-aruco2 to finish loading (in case of race)
   useEffect(() => {
     if (ready) return
     let cancelled = false
@@ -52,7 +48,6 @@ export default function MarkerPrintPage({ onBack }) {
 
   return (
     <div className="marker-print-root max-w-4xl mx-auto">
-      {/* Screen-only header */}
       <div className="print:hidden mb-6">
         <button
           onClick={onBack}
@@ -74,7 +69,6 @@ export default function MarkerPrintPage({ onBack }) {
         </button>
       </div>
 
-      {/* Instruction box (screen only) */}
       <div className="print:hidden mb-6 bg-gray-900 border border-gray-800 rounded-lg p-5">
         <h3 className="text-base font-semibold text-gray-100 mb-3">
           So bringst du die Marker an
@@ -88,7 +82,6 @@ export default function MarkerPrintPage({ onBack }) {
         </ol>
       </div>
 
-      {/* Markers – visible on both screen and print */}
       <div className="marker-grid flex flex-col gap-8 items-center">
         {!ready && (
           <div className="text-gray-400 text-sm">Marker werden generiert …</div>
@@ -120,7 +113,6 @@ export default function MarkerPrintPage({ onBack }) {
         })}
       </div>
 
-      {/* Print-mode overrides – same pattern as QRCodePrintPage */}
       <style>{`
         .marker-svg svg {
           width: 100%;

@@ -1,14 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 
-/**
- * Modal for creating or editing a device in a rack.
- *
- * Validation rules:
- *   - name + height + position required
- *   - position+height must fit inside the rack (1..totalUnits)
- *   - the resulting HE range must not overlap with any other device in the rack
- *     (when editing, the device being edited is excluded from collision check)
- */
 export default function DeviceEditor({ rack, device, initialPosition, onSave, onDelete, onCancel }) {
   const isNew = !device
 
@@ -25,7 +16,6 @@ export default function DeviceEditor({ rack, device, initialPosition, onSave, on
     environmentInfo: device?.environmentInfo ?? '',
   }))
 
-  // Build occupancy map of all OTHER devices to check collisions against
   const occupiedUnits = useMemo(() => {
     const map = {}
     rack.devices.forEach(d => {
@@ -55,13 +45,11 @@ export default function DeviceEditor({ rack, device, initialPosition, onSave, on
     return null
   }, [form, occupiedUnits, rack.totalUnits])
 
-  // Auto-derive form factor label from height when user changes height
   useEffect(() => {
     const h = Number(form.height)
     if (Number.isInteger(h) && h >= 1) {
       setForm(prev => ({ ...prev, formFactor: `${h}U` }))
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.height])
 
   const handleSubmit = (e) => {

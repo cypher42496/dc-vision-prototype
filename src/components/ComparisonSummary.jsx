@@ -2,16 +2,10 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
   const correct = results.filter(r => r.status === 'correct')
   const missing = results.filter(r => r.status === 'missing')
   const unexpected = results.filter(r => r.status === 'unexpected')
-  // Blind panels are reported separately because they are visually
-  // indistinguishable from an empty HE; a "not detected" result here
-  // only means "please confirm visually", not "real deviation".
   const blindpanelUnconfirmed = results.filter(r => r.status === 'blindpanel_unconfirmed')
   const deviations = [...missing, ...unexpected]
   const total = results.length
 
-  // For the match percentage, blindpanel_unconfirmed counts as "soft OK"
-  // (½ weight) — acknowledging that the plan expects them, even if the
-  // vision heuristic can't positively confirm them.
   const matchScore = correct.length + blindpanelUnconfirmed.length * 0.5
   const matchPercent = total > 0 ? Math.round((matchScore / total) * 100) : 0
 
@@ -21,7 +15,6 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
         <h2 className="text-2xl font-bold text-white mb-1">Abgleich abgeschlossen</h2>
         <p className="text-sm text-gray-400 mb-6">{rackName}</p>
 
-        {/* Summary cards */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-white">{total}</div>
@@ -37,7 +30,6 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
           </div>
         </div>
 
-        {/* Progress bar */}
         <div className="bg-gray-800 rounded-full h-3 overflow-hidden mb-2">
           <div
             className="h-full bg-emerald-500 rounded-full transition-all"
@@ -53,7 +45,6 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
           )}
         </p>
 
-        {/* Correct positions */}
         {correct.length > 0 && (
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-3">
@@ -71,7 +62,6 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
           </div>
         )}
 
-        {/* Blind panels — soft category, visual confirmation required */}
         {blindpanelUnconfirmed.length > 0 && (
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-3">
@@ -96,7 +86,6 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
           </div>
         )}
 
-        {/* Missing devices */}
         {missing.length > 0 && (
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-red-400 uppercase tracking-wider mb-3">
@@ -117,7 +106,6 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
           </div>
         )}
 
-        {/* Unexpected devices */}
         {unexpected.length > 0 && (
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-red-400 uppercase tracking-wider mb-3">
@@ -138,7 +126,6 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
           </div>
         )}
 
-        {/* No deviations */}
         {deviations.length === 0 && blindpanelUnconfirmed.length === 0 && (
           <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 text-center mb-6">
             <div className="text-lg text-emerald-400 font-medium">Keine Abweichungen!</div>
@@ -154,7 +141,6 @@ export default function ComparisonSummary({ rackName, results, onScanNew, onBack
           </div>
         )}
 
-        {/* Action buttons */}
         <div className="flex gap-3">
           <button
             onClick={onScanNew}

@@ -3,7 +3,6 @@ import { QRCodeSVG } from 'qrcode.react'
 export default function QRCodePrintPage({ racks, onBack }) {
   return (
     <div className="qr-print-root">
-      {/* Screen-only header */}
       <div className="print:hidden">
         <button
           onClick={onBack}
@@ -27,7 +26,6 @@ export default function QRCodePrintPage({ racks, onBack }) {
         </div>
       </div>
 
-      {/* Cards: on screen → grid; on print → single column with page breaks */}
       <div className="qr-grid grid grid-cols-1 md:grid-cols-3 gap-6">
         {racks.map(rack => (
           <div
@@ -53,12 +51,6 @@ export default function QRCodePrintPage({ racks, onBack }) {
         ))}
       </div>
 
-      {/*
-        Print-mode overrides. The app's normal layout puts everything inside
-        a flex container with overflow-auto on <main>, which CLIPS content
-        in print mode and is the reason a 4th QR code never made it onto a
-        second physical page. We undo all of that here.
-      */}
       <style>{`
         @media print {
           @page {
@@ -66,8 +58,6 @@ export default function QRCodePrintPage({ racks, onBack }) {
             margin: 1.5cm;
           }
 
-          /* Reset every container that would otherwise constrain content height
-             or hide overflow during print. */
           html, body, #root {
             height: auto !important;
             min-height: 0 !important;
@@ -86,12 +76,10 @@ export default function QRCodePrintPage({ racks, onBack }) {
             overflow: visible !important;
           }
 
-          /* Hide the navigation sidebar in print */
           aside {
             display: none !important;
           }
 
-          /* Let <main> flow freely instead of clipping its scroll area */
           main {
             display: block !important;
             overflow: visible !important;
@@ -109,8 +97,6 @@ export default function QRCodePrintPage({ racks, onBack }) {
             width: 100% !important;
           }
 
-          /* On print: stack the cards vertically, single column, no gap.
-             We control vertical placement via card sizing + page-break-inside. */
           .qr-grid {
             display: block !important;
             grid-template-columns: none !important;
@@ -118,9 +104,6 @@ export default function QRCodePrintPage({ racks, onBack }) {
             width: 100% !important;
           }
 
-          /* Each card: a fixed printable height that fits 2 per A4 page,
-             centered, with a forced "no split" rule so a card is never
-             broken across two physical pages. */
           .qr-card {
             display: flex !important;
             flex-direction: column !important;
@@ -135,7 +118,6 @@ export default function QRCodePrintPage({ racks, onBack }) {
             break-inside: avoid !important;
           }
 
-          /* Force the QR svg itself to a comfortable physical size for scanning */
           .qr-card svg {
             width: 7cm !important;
             height: 7cm !important;

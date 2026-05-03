@@ -4,12 +4,10 @@ function safeStopScanner(scanner) {
   if (!scanner) return
   try {
     const state = scanner.getState?.()
-    // Only stop if scanning or paused (states 2 and 3 in html5-qrcode)
     if (state === 2 || state === 3) {
       scanner.stop().catch(() => {})
     }
   } catch {
-    // Ignore all errors during stop
   }
 }
 
@@ -80,7 +78,6 @@ export default function QRScanner({ onScan, onCancel, validRackIds }) {
     onCancel()
   }
 
-  // Fallback UI when camera is not available
   if (error === 'no-camera') {
     return (
       <div className="fixed inset-0 bg-gray-950 z-50 flex flex-col items-center justify-center">
@@ -115,7 +112,6 @@ export default function QRScanner({ onScan, onCancel, validRackIds }) {
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
-      {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-white">QR-Code am Rack scannen</h2>
@@ -128,19 +124,16 @@ export default function QRScanner({ onScan, onCancel, validRackIds }) {
         </div>
       </div>
 
-      {/* Scanner */}
       <div className="flex-1 flex items-center justify-center">
         <div id="qr-reader" className="w-full max-w-lg" />
       </div>
 
-      {/* Transient error */}
       {error && error !== 'no-camera' && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-6 py-3 rounded-lg text-sm shadow-lg">
           {error}
         </div>
       )}
 
-      {/* Help text */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 text-center">
         <p className="text-sm text-gray-300">
           {scannerReady

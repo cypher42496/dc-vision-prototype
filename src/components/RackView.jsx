@@ -17,12 +17,10 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
   const UNIT_HEIGHT = 28
   const GAP = 2
 
-  // --- Helper: check if a device has network ports ---
   const hasNetworkPorts = (device) => device.ports && device.ports.length > 0
   const getConnectedPortCount = (device) =>
     (device.ports ?? []).filter(p => p.connectedTo).length
 
-  // --- Color logic depends on view mode ---
   const getDeviceColor = (device) => {
     if (viewMode === 'security') {
       return device.securityInfo
@@ -39,7 +37,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
         ? 'bg-blue-500/70 border-blue-400'
         : 'bg-gray-700/50 border-gray-600'
     }
-    // normal mode
     if (device.status !== device.plannedStatus || device.plannedModel) {
       return 'bg-red-500/80 border-red-400 hover:bg-red-500'
     }
@@ -75,7 +72,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     return 'Produktiv'
   }
 
-  // Sub-line shown in audit/network modes
   const getAuditSnippet = (device) => {
     if (viewMode === 'security' && device.securityInfo) {
       return device.securityInfo.length > 60
@@ -99,7 +95,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     return null
   }
 
-  // Build a map of which units are occupied
   const unitMap = {}
   rack.devices.forEach(device => {
     if (device.position > 0) {
@@ -109,9 +104,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     }
   })
 
-  // --- Connection layout for network mode ---
-  // Compute pixel Y-center for every device (measured from top of rack stack).
-  // Rows are rendered top-to-bottom (highest HE first), so Y grows downward.
   const deviceYCenter = {}
   {
     let y = 0
@@ -127,7 +119,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     }
   }
 
-  // Total rack stack height (for SVG viewBox).
   const rackStackHeight = (() => {
     let y = 0
     for (let u = rack.totalUnits; u >= 1; u--) {
@@ -140,10 +131,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     return Math.max(0, y - GAP)
   })()
 
-  // Derive unique device-to-device connections within this rack.
-  // A connection is "ok" if both endpoints are plan-konform
-  // (status === plannedStatus === 'produktiv', no plannedModel).
-  // Otherwise it's flagged as problematic (orange, dashed).
   const isDeviceHealthy = (d) =>
     d.status === 'produktiv' &&
     d.plannedStatus === 'produktiv' &&
@@ -172,7 +159,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     })
   }
 
-  // Render top to bottom
   const rows = []
   for (let u = rack.totalUnits; u >= 1; u--) {
     const device = unitMap[u]
@@ -243,13 +229,11 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
     )
   }
 
-  // Count stats
   const activeDevices = rack.devices.filter(d => d.status === 'produktiv').length
   const plannedDevices = rack.devices.filter(d => d.status === 'geplant').length
   const deviations = rack.devices.filter(d => d.status !== d.plannedStatus || d.plannedModel).length
   const usedUnits = rack.devices.reduce((sum, d) => sum + d.height, 0)
 
-  // Audit mode stats
   const securityCount = rack.devices.filter(d => d.securityInfo).length
   const environmentCount = rack.devices.filter(d => d.environmentInfo).length
   const networkDeviceCount = rack.devices.filter(d => hasNetworkPorts(d)).length
@@ -273,7 +257,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
         )}
       </div>
 
-      {/* View mode toggle — horizontally scrollable on mobile */}
       <div className="flex items-center gap-1 mb-6 bg-gray-900 border border-gray-800 rounded-lg p-1 overflow-x-auto max-w-full scrollbar-hide">
         {VIEW_MODES.map(mode => (
           <button
@@ -292,7 +275,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
         ))}
       </div>
 
-      {/* Stats — changes by mode */}
       {viewMode === 'normal' ? (
         <div className="grid grid-cols-4 gap-4 mb-6">
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
@@ -354,7 +336,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
         </div>
       )}
 
-      {/* Rack visualization */}
       <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
         <div className="flex items-start gap-0">
           <div className="flex-1 flex flex-col gap-[2px] min-w-0">
@@ -376,7 +357,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
                   const y1 = deviceYCenter[c.from.id]
                   const y2 = deviceYCenter[c.to.id]
                   if (y1 === undefined || y2 === undefined) return null
-                  // Stagger the bulge per connection to avoid overlap
                   const bulge = 55 + (i % 3) * 15
                   const stroke = c.ok ? '#60a5fa' : '#fb923c'
                   const dash = c.ok ? undefined : '5 4'
@@ -404,7 +384,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
         </div>
       </div>
 
-      {/* Legend — changes by mode */}
       {viewMode === 'normal' ? (
         <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-xs text-gray-400">
           <div className="flex items-center gap-2">
@@ -465,7 +444,6 @@ export default function RackView({ rack, onDeviceClick, onAddDevice, onUpdateDev
         </div>
       )}
 
-      {/* Capacity bar */}
       <div className="mt-4 bg-gray-800 rounded-full h-2 overflow-hidden">
         <div
           className="h-full bg-cyan-500 rounded-full transition-all"

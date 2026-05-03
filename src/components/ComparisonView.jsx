@@ -15,7 +15,6 @@ export default function ComparisonView({ rack }) {
     } else if (device.status !== device.plannedStatus) {
       reasons.push(`Status: Soll "${device.plannedStatus}", Ist "${device.status}"`)
     }
-    // Check port deviations
     const portDevs = device.ports?.filter(p => p.status !== p.plannedStatus) || []
     if (portDevs.length > 0) {
       reasons.push(`${portDevs.length} Port-Abweichung(en)`)
@@ -58,7 +57,6 @@ export default function ComparisonView({ rack }) {
         <p className="text-sm text-gray-400 mt-1">{rack.name} – {rack.location}</p>
       </div>
 
-      {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
           <div className="text-2xl font-bold text-white">{devices.length}</div>
@@ -74,7 +72,6 @@ export default function ComparisonView({ rack }) {
         </div>
       </div>
 
-      {/* Match bar */}
       <div className="bg-gray-800 rounded-full h-3 overflow-hidden mb-6">
         <div
           className="h-full bg-emerald-500 rounded-full transition-all"
@@ -85,7 +82,6 @@ export default function ComparisonView({ rack }) {
         {matchCount} von {devices.length} Geräten stimmen überein ({Math.round((matchCount / devices.length) * 100)}%)
       </p>
 
-      {/* Side by side comparison */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <h3 className="text-sm font-semibold text-cyan-400 uppercase tracking-wider mb-3">
@@ -109,7 +105,6 @@ export default function ComparisonView({ rack }) {
         </div>
       </div>
 
-      {/* Deviation details */}
       {deviationCount > 0 && (
         <div className="mt-8">
           <h3 className="text-lg font-semibold text-white mb-4">Abweichungen im Detail</h3>

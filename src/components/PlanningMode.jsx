@@ -12,7 +12,6 @@ export default function PlanningMode({ rack, onUpdateDevice }) {
     onUpdateDevice(deviceId, { status: 'aktiv', plannedStatus: 'aktiv' })
   }
 
-  // Build unit map
   const unitMap = {}
   rack.devices.forEach(device => {
     if (device.position > 0) {
@@ -22,7 +21,6 @@ export default function PlanningMode({ rack, onUpdateDevice }) {
     }
   })
 
-  // Render top (42) to bottom (1)
   const rows = []
   for (let u = rack.totalUnits; u >= 1; u--) {
     const device = unitMap[u]
@@ -83,7 +81,6 @@ export default function PlanningMode({ rack, onUpdateDevice }) {
         <p className="text-sm text-gray-400 mt-1">{rack.name} – {rack.location}</p>
       </div>
 
-      {/* Progress */}
       <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-6">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-white">Einbaufortschritt</h3>
@@ -107,14 +104,12 @@ export default function PlanningMode({ rack, onUpdateDevice }) {
         )}
       </div>
 
-      {/* Rack visualization */}
       <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
         <div className="flex flex-col gap-[2px]">
           {rows}
         </div>
       </div>
 
-      {/* Device list */}
       <div className="mt-6">
         <h3 className="text-lg font-semibold text-white mb-4">Geräteliste</h3>
         <div className="space-y-2">
@@ -146,7 +141,6 @@ export default function PlanningMode({ rack, onUpdateDevice }) {
         </div>
       </div>
 
-      {/* Legend */}
       <div className="flex gap-6 mt-6 text-xs text-gray-400">
         <div className="flex items-center gap-2">
           <div className="w-4 h-3 rounded border border-emerald-500 bg-emerald-500/20"></div>

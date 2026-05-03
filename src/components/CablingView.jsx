@@ -5,12 +5,10 @@ export default function CablingView({ rack, cables, allDevices }) {
 
   if (!rack) return null
 
-  // Get all ports from this rack's devices
   const rackPorts = rack.devices.flatMap(d =>
     (d.ports || []).map(p => ({ ...p, deviceName: d.name, deviceId: d.id }))
   )
 
-  // Find cables connected to this rack
   const rackPortIds = new Set(rackPorts.map(p => p.id))
   const relevantCables = cables.filter(
     c => rackPortIds.has(c.sourcePort) || rackPortIds.has(c.targetPort)
@@ -53,7 +51,6 @@ export default function CablingView({ rack, cables, allDevices }) {
   const okCount = relevantCables.filter(c => getCableStatus(c) === 'ok').length
   const devCount = relevantCables.filter(c => getCableStatus(c) === 'deviation').length
 
-  // Also find ports that should be connected but aren't
   const disconnectedPorts = rackPorts.filter(
     p => p.plannedStatus === 'verbunden' && p.status === 'nicht verbunden'
   )
@@ -65,7 +62,6 @@ export default function CablingView({ rack, cables, allDevices }) {
         <p className="text-sm text-gray-400 mt-1">{rack.name} – {rack.location}</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
           <div className="text-2xl font-bold text-white">{relevantCables.length}</div>
@@ -81,7 +77,6 @@ export default function CablingView({ rack, cables, allDevices }) {
         </div>
       </div>
 
-      {/* Cable list */}
       <div className="space-y-2">
         {relevantCables.map(cable => {
           const status = getCableStatus(cable)
@@ -98,33 +93,28 @@ export default function CablingView({ rack, cables, allDevices }) {
               }`}
             >
               <div className="flex items-center gap-3">
-                {/* Source */}
                 <div className="flex-1 text-right">
                   <div className="text-sm text-white">{source?.device.name}</div>
                   <div className="text-xs text-gray-400 font-mono">{source?.port.name}</div>
                 </div>
 
-                {/* Cable line */}
                 <div className="flex items-center gap-1 px-2">
                   <div className={`w-2 h-2 rounded-full ${getCableLineColor(status)}`} />
                   <div className={`w-16 h-0.5 ${getCableLineColor(status)}`} />
                   <div className={`w-2 h-2 rounded-full ${getCableLineColor(status)}`} />
                 </div>
 
-                {/* Target */}
                 <div className="flex-1">
                   <div className="text-sm text-white">{target?.device.name}</div>
                   <div className="text-xs text-gray-400 font-mono">{target?.port.name}</div>
                 </div>
 
-                {/* Cable info */}
                 <div className="text-right shrink-0 ml-4">
                   <div className="text-xs text-gray-500">{cable.label}</div>
                   <div className="text-xs text-gray-600">{cable.type} · {cable.length}</div>
                 </div>
               </div>
 
-              {/* Expanded detail */}
               {isSelected && (
                 <div className="mt-3 pt-3 border-t border-gray-700/50 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   <div>
@@ -152,7 +142,6 @@ export default function CablingView({ rack, cables, allDevices }) {
         })}
       </div>
 
-      {/* Disconnected ports */}
       {disconnectedPorts.length > 0 && (
         <div className="mt-8">
           <h3 className="text-lg font-semibold text-white mb-4">
@@ -177,7 +166,6 @@ export default function CablingView({ rack, cables, allDevices }) {
         </div>
       )}
 
-      {/* Legend */}
       <div className="flex gap-6 mt-6 text-xs text-gray-400">
         <div className="flex items-center gap-2">
           <div className="w-3 h-0.5 bg-emerald-500"></div>

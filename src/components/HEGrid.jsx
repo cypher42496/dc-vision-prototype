@@ -10,10 +10,8 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
   const videoRef = useRef(null)
   const [hasCamera, setHasCamera] = useState(false)
 
-  // Track which HEs the user marked as "belegt"
   const [markedUnits, setMarkedUnits] = useState(new Set())
 
-  // Build soll map: which HEs should be occupied
   const sollMap = {}
   rack.devices.forEach(device => {
     if (device.position > 0 && device.height > 0) {
@@ -23,7 +21,6 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
     }
   })
 
-  // Start camera feed as background
   useEffect(() => {
     let stream = null
     const startCamera = async () => {
@@ -37,7 +34,6 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
           setHasCamera(true)
         }
       } catch {
-        // Camera may not be available, continue without
       }
     }
     startCamera()
@@ -48,13 +44,11 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
     }
   }, [])
 
-  // Toggle a HE unit. If it belongs to a device, toggle all HEs of that device.
   const toggleUnit = (unitNumber) => {
     const device = sollMap[unitNumber]
     const unitsToToggle = []
 
     if (device) {
-      // Toggle all HEs belonging to this device
       for (let i = 0; i < device.height; i++) {
         unitsToToggle.push(device.position + i)
       }
@@ -76,18 +70,16 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
     })
   }
 
-  // Determine color for each HE
   const getHEColor = (unitNumber) => {
     const sollOccupied = !!sollMap[unitNumber]
     const istOccupied = markedUnits.has(unitNumber)
 
-    if (sollOccupied && istOccupied) return 'bg-emerald-500/50 border-emerald-400' // correct
-    if (sollOccupied && !istOccupied) return 'bg-gray-500/20 border-gray-600'       // not yet marked
-    if (!sollOccupied && istOccupied) return 'bg-red-500/50 border-red-400'          // unexpected
-    return 'bg-gray-900/20 border-gray-700/30'                                       // empty, correct
+    if (sollOccupied && istOccupied) return 'bg-emerald-500/50 border-emerald-400'
+    if (sollOccupied && !istOccupied) return 'bg-gray-500/20 border-gray-600'
+    if (!sollOccupied && istOccupied) return 'bg-red-500/50 border-red-400'
+    return 'bg-gray-900/20 border-gray-700/30'
   }
 
-  // After user starts marking, show live deviations
   const getHEStatus = (unitNumber) => {
     const sollOccupied = !!sollMap[unitNumber]
     const istOccupied = markedUnits.has(unitNumber)
@@ -106,7 +98,6 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
       const istOccupied = markedUnits.has(u)
       const device = sollMap[u]
 
-      // Only report top unit of each device
       if (device && u !== device.position) continue
 
       if (sollOccupied || istOccupied) {
@@ -130,7 +121,6 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
 
   return (
     <div className={`fixed inset-0 z-50 flex flex-col ${hasCamera ? '' : 'bg-gray-900'}`}>
-      {/* Camera background */}
       <video
         ref={videoRef}
         autoPlay
@@ -138,10 +128,8 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
         muted
         className={`absolute inset-0 w-full h-full object-cover ${hasCamera ? '' : 'hidden'}`}
       />
-      {/* Dark overlay for readability (only when camera is active) */}
       {hasCamera && <div className="absolute inset-0 bg-black/40" />}
 
-      {/* Header */}
       <div className="relative z-10 bg-black/60 backdrop-blur-sm p-3 flex flex-col gap-2 shrink-0">
         <div className="flex items-center justify-between">
           <div>
@@ -155,7 +143,6 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
             Abbrechen
           </button>
         </div>
-        {/* View mode toggle */}
         {onSwitchMode && (
           <div className="flex gap-1 bg-black/40 rounded-lg p-0.5 overflow-x-auto max-w-full scrollbar-hide">
             {HE_VIEW_MODES.map(mode => (
@@ -177,12 +164,10 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
         )}
       </div>
 
-      {/* HE Grid */}
       <div className="relative z-10 flex-1 overflow-auto px-3 py-2">
         <div className="max-w-md mx-auto flex flex-col gap-[1px]">
           {Array.from({ length: totalUnits }, (_, i) => totalUnits - i).map(u => {
             const device = sollMap[u]
-            // Skip if this HE is part of a device but not the top unit
             if (device && u !== device.position + device.height - 1) return null
 
             const height = device ? device.height : 1
@@ -226,7 +211,6 @@ export default function HEGrid({ rack, onComplete, onCancel, onSwitchMode }) {
         </div>
       </div>
 
-      {/* Footer */}
       <div className="relative z-10 bg-black/60 backdrop-blur-sm p-3 flex items-center justify-between shrink-0">
         <div className="text-xs text-gray-300">
           {markedUnits.size} von {totalUnits} HE als belegt markiert
